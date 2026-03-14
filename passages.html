@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Passages</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+<header>
+<h1>지문집</h1>
+</header>
+
+<div style="padding:20px">
+
+<button onclick="goBack()">← 이전</button>
+<button onclick="goHome()">홈</button>
+
+  <input 
+type="text"
+id="passageSearch"
+placeholder="지문 제목 검색..."
+oninput="searchPassages()"
+style="width:100%;padding:10px;margin:10px 0"
+>
+  
+<h2>지문 목록</h2>
+
+<div id="passageList"></div>
+
+<h3>지문 추가</h3>
+
+<input id="title" placeholder="제목">
+
+<textarea id="text" placeholder="지문"></textarea>
+
+<textarea id="translation" placeholder="해석"></textarea>
+
+<input id="topic" placeholder="주제 (선택)">
+
+<button onclick="addPassage()">추가</button>
+
+</div>
+
+<script src="../app.js"></script>
+
+<screipt>
+loadPassages()
+</screipt>
+
+</body>
+</html>

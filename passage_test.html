@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>지문 테스트</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+<header>
+<h1>지문 테스트</h1>
+</header>
+
+<div class="container">
+
+<button onclick="location.href='tests.html'">← 테스트 메뉴</button>
+
+<h2>지문 선택</h2>
+
+<div id="passageSelection"></div>
+
+<h3>테스트 유형</h3>
+
+<select id="passageTestType">
+<option value="blank">빈칸 테스트</option>
+<option value="rewrite">백지 테스트</option>
+</select>
+
+<br><br>
+
+<button onclick="startPassageTest()">테스트 시작</button>
+
+<hr>
+
+<div id="passageTestArea" style="display:none">
+
+<div id="passageQuestion"></div>
+
+<textarea id="passageAnswer"></textarea>
+
+<br>
+
+<button onclick="submitPassageAnswer()">제출</button>
+
+</div>
+
+<hr>
+
+<div id="passageResult"></div>
+
+</div>
+
+<script src="../app.js"></script>
+
+</body>
+</html>

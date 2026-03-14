@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Stats</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+<header>
+<h1>통계</h1>
+</header>
+
+<div style="padding:20px">
+
+<button onclick="goBack()">← 이전</button>
+<button onclick="goHome()">홈</button>
+
+<h2>전체 통계</h2>
+
+<div class="card">
+총 문제 수: <span id="totalQuestions">0</span>
+</div>
+
+<div class="card">
+총 정답 수: <span id="totalCorrect">0</span>
+</div>
+
+<div class="card">
+전체 정답률: <span id="totalRate">0%</span>
+</div>
+
+<h2>유형별 통계</h2>
+
+<div class="card">
+단어 테스트 정답률: <span id="wordRate">0%</span>
+</div>
+
+<div class="card">
+지문 테스트 정답률: <span id="passageRate">0%</span>
+</div>
+
+<h2>학습 분석</h2>
+
+<div class="card">
+가장 많이 틀린 단어: <span id="mostWrongWord">없음</span>
+</div>
+
+<div class="card">
+가장 많이 공부한 지문: <span id="mostPassage">없음</span>
+</div>
+
+<h2>공부 기록</h2>
+
+<div id="statsBox">
+
+공부한 날짜 수: <span id="studyDays">0</span><br><br>
+
+공부량: 준비중<br>
+공부시간: <span id="studyTime">0</span>분
+연속 공부: 준비중
+
+</div>
+
+<h2>데이터 관리</h2>
+
+<button onclick="exportData()">데이터 다운로드</button>
+
+<br><br>
+
+<input type="file" id="importFile">
+
+<button onclick="importData()">데이터 업로드</button>
+
+</div>
+
+<script src="../app.js"></script>
+
+<script>
+loadStats()
+</script>
+
+</body>
+</html>
