@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>English Study</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div id="lockScreen" class="centerBox">
+<h2>Enter Password</h2>
+<input 
+type="password" 
+id="passwordInput"
+onkeydown="if(event.key==='Enter'){checkPassword()}"
+>
+<button onclick="checkPassword()">Enter</button>
+</div>
+
+<div id="app" style="display:none">
+
+<header>
+<h1>English Study</h1>
+</header>
+
+<nav class="menu">
+
+<a href="pages/wordbook.html" class="card">
+단어장
+</a>
+
+<a href="pages/passages.html" class="card">
+지문집
+</a>
+
+<a href="pages/tests.html" class="card">
+테스트
+</a>
+
+<a href="pages/stats.html" class="card">
+통계
+</a>
+
+</nav>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
