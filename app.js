@@ -1209,3 +1209,25 @@ document.getElementById("topic").value=""
 loadPassages()
 
 }
+
+let currentWrongType = 'all';
+
+function showWrong(type) {
+    currentWrongType = type;
+    const notes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
+    const list = document.getElementById("wrongList");
+    list.innerHTML = "";
+
+    const filtered = type === 'all' ? notes : notes.filter(n => n.type === type);
+
+    filtered.forEach((n, i) => {
+        const div = document.createElement("div");
+        div.className = "wrongItem";
+        div.innerHTML = `
+            <p><b>문제:</b> ${n.question || n.title}</p>
+            <p style="color:red">내 답: ${n.user}</p>
+            <p style="color:blue">정답: ${n.correct}</p>
+        `;
+        list.appendChild(div);
+    });
+}
