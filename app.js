@@ -193,26 +193,27 @@ document.getElementById("wordSection").style.display="none"
 
 }
 
+let displayedWords = [];
+
 function loadWords() {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
-    let words = [];
-
+    displayedWords = [];
     if (currentSetIndex === "fav") {
         sets.forEach(s => {
-            s.words.forEach(w => { if(w.favorite) words.push(w); });
+            s.words.forEach(w => { if(w.favorite) displayedWords.push(w); });
         });
     } else {
         if (currentSetIndex === null || !sets[currentSetIndex]) return;
-        words = sets[currentSetIndex].words;
+        displayedWords = [...sets[currentSetIndex].words];
     }
 
     const list = document.getElementById("wordList");
     if (!list) return;
     list.innerHTML = "";
 
-    words.sort((a, b) => a.eng.toLowerCase().localeCompare(b.eng.toLowerCase()));
+    displayedWords.sort((a, b) => a.eng.toLowerCase().localeCompare(b.eng.toLowerCase()));
 
-    words.forEach((w, i) => {
+    displayedWords.forEach((w, i) => {
         const div = document.createElement("div");
         div.className = "wordCard";
         div.innerHTML = `
@@ -280,35 +281,26 @@ loadWords()
 
 function toggleFavorite(i) {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
+    const targetWord = displayedWords[i]; 
+
+    sets.forEach(s => {
+        s.words.forEach(w => {
+            if (w.eng === targetWord.eng && JSON.stringify(w.mean) === JSON.stringify(targetWord.mean)) {
+                w.favorite = !w.favorite;
+            }
+        });
+    });
+
+    localStorage.setItem("wordSets", JSON.stringify(sets));
 
     if (currentSetIndex === "fav") {
-        let favWords = [];
-        sets.forEach(s => {
-            s.words.forEach(w => { if(w.favorite) favWords.push(w); });
-        });
-        favWords.sort((a, b) => a.eng.toLowerCase().localeCompare(b.eng.toLowerCase()));
-
-        const targetWord = favWords[i];
-        
-        sets.forEach(s => {
-            s.words.forEach(w => {
-                if (w.eng === targetWord.eng && JSON.stringify(w.mean) === JSON.stringify(targetWord.mean)) {
-                    w.favorite = false;
-                }
-            });
-        });
-
-        localStorage.setItem("wordSets", JSON.stringify(sets));
-        loadWords(); 
-
+        loadWords();
     } else {
-        const word = sets[currentSetIndex].words[i];
-        word.favorite = !word.favorite;
-        localStorage.setItem("wordSets", JSON.stringify(sets));
-
         const starBtn = document.getElementById("favBtn-" + i);
         if (starBtn) {
-            starBtn.innerText = word.favorite ? "★" : "☆";
+            const isNowFavorite = !targetWord.favorite; 
+            targetWord.favorite = isNowFavorite; // displayedWords 데이터도 업데이트
+            starBtn.innerText = isNowFavorite ? "★" : "☆";
         }
     }
 }
