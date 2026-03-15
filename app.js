@@ -198,21 +198,6 @@ function speakWord(word) {
     speechSynthesis.speak(msg);
 }
 
-// --- 단어 테스트 ---
-function loadTestSets() {
-    const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
-    const container = document.getElementById("setSelection");
-    if (!container) return;
-    container.innerHTML = "";
-    sets.forEach((set, i) => {
-        const div = document.createElement("div");
-        div.className = "setItem";
-        div.setAttribute("data-name", set.name.toLowerCase());
-        div.innerHTML = `<label><input type="checkbox" value="${i}"> ${set.name}</label>`;
-        container.appendChild(div);
-    });
-}
-
 function showFeedback(isCorrect, msg = "") {
     let feedbackEl = document.getElementById("testFeedback");
     if (!feedbackEl) {
@@ -709,4 +694,45 @@ function submitAnswer() {
         currentQuestion++;
         showQuestion();
     }, 1200);
+}
+
+
+function loadTestSets() {
+    const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
+    const container = document.getElementById("setSelection");
+    
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (sets.length === 0) {
+        container.innerHTML = "<p style='padding:10px; color:#999;'>등록된 단어 세트가 없습니다.</p>";
+        return;
+    }
+
+    sets.forEach((set, i) => {
+        const div = document.createElement("div");
+        div.className = "setItem word-set-item";
+        div.setAttribute("data-name", set.name.toLowerCase());
+        div.innerHTML = `
+            <label style="display: block; padding: 8px 5px; cursor: pointer; border-bottom: 1px solid #f0f0f0;">
+                <input type="checkbox" value="${i}"> ${set.name} 
+                <span style="font-size: 0.85rem; color: #888;">(${set.words.length}단어)</span>
+            </label>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function filterWordSets() {
+    const query = document.getElementById("wordSetSearchInput").value.toLowerCase();
+    const items = document.querySelectorAll(".word-set-item");
+    
+    items.forEach(item => {
+        const setName = item.getAttribute("data-name");
+        if (setName.includes(query)) {
+            item.style.display = "block";
+        } else {
+            item.style.display = "none";
+        }
+    });
 }
