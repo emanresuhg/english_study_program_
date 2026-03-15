@@ -1,4 +1,3 @@
-// [1] 전역 변수 선언 (딱 한 번씩만!)
 let studyStartTime = null;
 let testWords = [];
 let currentQuestion = 0;
@@ -14,7 +13,6 @@ let passageCorrect = 0;
 let blankAnswers = [];
 let currentWrongType = 'all';
 
-// [2] 공통/내비게이션 함수
 function goHome() {
     location.href = "../index.html";
 }
@@ -23,7 +21,6 @@ function goBack() {
     history.back();
 }
 
-// [3] 통계 및 데이터 관리 함수
 function getStats() {
     return JSON.parse(localStorage.getItem("stats")) || {
         totalQuestions: 0, totalCorrect: 0,
@@ -94,14 +91,12 @@ function loadStats() {
     document.getElementById("studyTime").textContent = stats.studyMinutes || 0;
 }
 
-// [4] 단어장 관리 함수
 function loadSets() {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
     const list = document.getElementById("setList");
     if (!list) return;
     list.innerHTML = "";
 
-    // 즐겨찾기 세트
     const favDiv = document.createElement("div");
     favDiv.className = "wordCard";
     favDiv.innerHTML = `<b>★ 즐겨찾기 단어 모음</b><div class="wordActions"><button class="smallBtn" onclick="openFavoriteSet()">열기</button></div>`;
@@ -230,7 +225,6 @@ function speakWord(word) {
     speechSynthesis.speak(msg);
 }
 
-// [5] 단어 테스트 함수
 function loadTestSets() {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
     const container = document.getElementById("setSelection");
@@ -276,7 +270,6 @@ function showQuestion() {
     startTimer();
 }
 
-// [교체] 정답 제출 로직: 순서/공백/대소문자 무시 버전
 function submitAnswer() {
     clearInterval(timerInterval);
 
@@ -287,19 +280,15 @@ function submitAnswer() {
     let isCorrect = false;
 
     if (type === "meaning") {
-        // 1. 사용자가 입력한 뜻들을 정리 (쉼표 기준 분리 -> 공백 제거 -> 소문자 변환)
         const userMeans = userAnswer.split(",")
                                     .map(m => m.trim().toLowerCase())
                                     .filter(m => m !== "");
         
-        // 2. 실제 정답 뜻들을 정리
         const correctMeans = word.mean.map(m => m.trim().toLowerCase());
 
-        // 3. 비교: 개수가 같고, 모든 정답이 사용자 입력에 포함되어 있는지 확인 (순서 무관)
         isCorrect = (userMeans.length === correctMeans.length && 
                      correctMeans.every(m => userMeans.includes(m)));
     } else {
-        // 스펠링 검사 (대소문자/공백 무시)
         isCorrect = (userAnswer.toLowerCase() === word.eng.toLowerCase());
     }
 
@@ -314,23 +303,19 @@ function submitAnswer() {
             correct: word.mean.join(", "),
             user: userAnswer || "(무응답)"
         });
-        // 오답일 때는 정답이 무엇인지도 피드백에 포함
         const correctMsg = type === 'meaning' ? word.mean.join(", ") : word.eng;
         showFeedback(false, correctMsg); 
     }
 
-    // 피드백을 보여주는 동안 잠깐 대기 후 다음 문제로 (약 1.2초)
     setTimeout(() => {
         currentQuestion++;
         showQuestion();
     }, 1200);
 }
 
-// [추가] 화면에 정답/오답 메시지를 띄워주는 함수
 function showFeedback(isCorrect, msg = "") {
     let feedbackEl = document.getElementById("testFeedback");
     
-    // 요소가 없으면 새로 생성 (최초 1회)
     if (!feedbackEl) {
         feedbackEl = document.createElement("div");
         feedbackEl.id = "testFeedback";
@@ -347,7 +332,6 @@ function showFeedback(isCorrect, msg = "") {
 
     feedbackEl.style.display = "block";
 
-    // 1초 후에 사라짐
     setTimeout(() => {
         feedbackEl.style.display = "none";
     }, 1000);
@@ -360,7 +344,6 @@ function endTest() {
     saveWrongNotes();
 }
 
-// [6] 지문 관리 함수
 function loadPassages() {
     const passages = JSON.parse(localStorage.getItem("passages")) || [];
     const list = document.getElementById("passageList");
@@ -421,7 +404,6 @@ function deletePassage(i) {
     loadPassages();
 }
 
-// [7] 타이머 및 유틸리티
 function startTimer() {
     timeLeft = 10;
     const timer = document.getElementById("timer");
@@ -457,7 +439,6 @@ function saveWrongNotes() {
     localStorage.setItem("wrongNotes", JSON.stringify(notes));
 }
 
-// [8] 초기화 및 이벤트 바인딩
 document.addEventListener("DOMContentLoaded", () => {
     loadSets();
     loadPassages();
@@ -474,7 +455,6 @@ document.addEventListener("DOMContentLoaded", () => {
     bindEnter("answerInput", submitAnswer);
 });
 
-// [교체] 지문 문제 보여주기 (해석창 초기 상태 반영)
 function showPassageQuestion() {
     if (currentPassageIndex >= testPassages.length) {
         endPassageTest();
@@ -569,4 +549,29 @@ function endPassageTest() {
 function nextPassage() {
     currentPassageIndex++;
     showPassageQuestion();
+}
+
+function loadPassageSelection() {
+    const passages = JSON.parse(localStorage.getItem("passages")) || [];
+    const container = document.getElementById("passageSelection");
+    
+    if (!container) return; 
+
+    container.innerHTML = "";
+    
+    if (passages.length === 0) {
+        container.innerHTML = "<p>등록된 지문이 없습니다. 지문집에서 지문을 먼저 추가해 주세요.</p>";
+        return;
+    }
+
+    passages.forEach((p, i) => {
+        const div = document.createElement("div");
+        div.className = "setItem";
+        div.innerHTML = `
+            <label>
+                <input type="checkbox" value="${i}"> ${p.title}
+            </label>
+        `;
+        container.appendChild(div);
+    });
 }
