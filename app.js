@@ -213,61 +213,6 @@ function loadTestSets() {
     });
 }
 
-function startWordTest() {
-    const checkboxes = document.querySelectorAll("#setSelection input:checked");
-    const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
-    testWords = [];
-    checkboxes.forEach(cb => { testWords = testWords.concat(sets[cb.value].words); });
-    if (testWords.length === 0) { alert("세트를 선택하세요."); return; }
-    startStudySession();
-    shuffleArray(testWords);
-    currentQuestion = 0; correctCount = 0; wrongWords = [];
-    document.getElementById("testArea").style.display = "block";
-    showQuestion();
-}
-
-function showQuestion() {
-    if (currentQuestion >= testWords.length) { endTest(); return; }
-    const type = document.getElementById("testType").value;
-    const word = testWords[currentQuestion];
-    const progress = `(${currentQuestion + 1}/${testWords.length}) `;
-    document.getElementById("question").innerText = progress + (type === "meaning" ? word.eng : word.mean.join(", "));
-    document.getElementById("answerInput").value = "";
-    document.getElementById("answerInput").focus();
-    startTimer();
-}
-
-function submitAnswer() {
-    clearInterval(timerInterval);
-    const type = document.getElementById("testType").value;
-    const word = testWords[currentQuestion];
-    const userAnswer = document.getElementById("answerInput").value.trim();
-
-    let isCorrect = false;
-    if (type === "meaning") {
-        const userMeans = userAnswer.split(",").map(m => m.trim().toLowerCase()).filter(m => m !== "");
-        const correctMeans = word.mean.map(m => m.trim().toLowerCase());
-        isCorrect = (userMeans.length === correctMeans.length && correctMeans.every(m => userMeans.includes(m)));
-    } else {
-        isCorrect = (userAnswer.toLowerCase() === word.eng.toLowerCase());
-    }
-
-    if (isCorrect) {
-        correctCount++;
-        recordQuestion("word", true, word.eng);
-        showFeedback(true);
-    } else {
-        recordQuestion("word", false, word.eng, userAnswer);
-        const correctMsg = type === 'meaning' ? word.mean.join(", ") : word.eng;
-        showFeedback(false, correctMsg); 
-    }
-
-    setTimeout(() => {
-        currentQuestion++;
-        showQuestion();
-    }, 1200);
-}
-
 function showFeedback(isCorrect, msg = "") {
     let feedbackEl = document.getElementById("testFeedback");
     if (!feedbackEl) {
@@ -681,4 +626,87 @@ function submitRewriteAnswer() {
     } else {
         alert("원본과 차이가 있습니다. 원본 지문을 확인해 보세요.");
     }
+}
+
+// [수정] 지문 닫기 함수
+function closePassage() {
+    const viewSection = document.getElementById("passageViewSection");
+    if (viewSection) {
+        viewSection.style.display = "none";
+        // 닫은 후 화면 상단으로 부드럽게 이동 (선택 사항)
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+// [수정] 단어 테스트 시작 로직 (라디오 버튼 값을 읽도록 수정)
+function startWordTest() {
+    const checkboxes = document.querySelectorAll("#setSelection input:checked");
+    const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
+    
+    // 라디오 버튼에서 선택된 값(meaning 또는 spelling) 가져오기
+    const typeEl = document.querySelector("input[name='wordTestType']:checked");
+    const type = typeEl ? typeEl.value : "meaning";
+
+    testWords = [];
+    checkboxes.forEach(cb => { testWords = testWords.concat(sets[cb.value].words); });
+    
+    if (testWords.length === 0) { alert("세트를 선택하세요."); return; }
+    
+    startStudySession();
+    shuffleArray(testWords);
+    currentQuestion = 0; correctCount = 0; wrongWords = [];
+    document.getElementById("testArea").style.display = "block";
+    showQuestion();
+}
+
+// [수정] 단어 문제 표시 로직 (라디오 버튼 값 참조)
+function showQuestion() {
+    if (currentQuestion >= testWords.length) { endTest(); return; }
+    
+    // 라디오 버튼 값 확인
+    const typeEl = document.querySelector("input[name='wordTestType']:checked");
+    const type = typeEl ? typeEl.value : "meaning";
+    
+    const word = testWords[currentQuestion];
+    const progress = `(${currentQuestion + 1}/${testWords.length}) `;
+    
+    document.getElementById("question").innerText = progress + (type === "meaning" ? word.eng : word.mean.join(", "));
+    document.getElementById("answerInput").value = "";
+    document.getElementById("answerInput").focus();
+    startTimer();
+}
+
+// [수정] 단어 정답 제출 로직 (라디오 버튼 값 참조)
+function submitAnswer() {
+    clearInterval(timerInterval);
+
+    const typeEl = document.querySelector("input[name='wordTestType']:checked");
+    const type = typeEl ? typeEl.value : "meaning";
+    
+    const word = testWords[currentQuestion];
+    const userAnswer = document.getElementById("answerInput").value.trim();
+
+    let isCorrect = false;
+    if (type === "meaning") {
+        const userMeans = userAnswer.split(",").map(m => m.trim().toLowerCase()).filter(m => m !== "");
+        const correctMeans = word.mean.map(m => m.trim().toLowerCase());
+        isCorrect = (userMeans.length === correctMeans.length && correctMeans.every(m => userMeans.includes(m)));
+    } else {
+        isCorrect = (userAnswer.toLowerCase() === word.eng.toLowerCase());
+    }
+
+    if (isCorrect) {
+        correctCount++;
+        recordQuestion("word", true, word.eng);
+        showFeedback(true);
+    } else {
+        recordQuestion("word", false, word.eng, userAnswer);
+        const correctMsg = type === 'meaning' ? word.mean.join(", ") : word.eng;
+        showFeedback(false, correctMsg); 
+    }
+
+    setTimeout(() => {
+        currentQuestion++;
+        showQuestion();
+    }, 1200);
 }
