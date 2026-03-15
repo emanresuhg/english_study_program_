@@ -176,40 +176,43 @@ document.getElementById("studyTime").textContent=minutes
 
 let currentSetIndex=null
 
-function loadSets(){
+function loadSets() {
+    const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
+    const list = document.getElementById("setList");
+    if (!list) return;
+    list.innerHTML = "";
 
-const sets = JSON.parse(localStorage.getItem("wordSets")) || []
+    const favDiv = document.createElement("div");
+    favDiv.className = "wordCard";
+    favDiv.style.border = "2px solid #ffd700"; // 즐겨찾기는 강조 표시
+    favDiv.innerHTML = `
+        <b>★ 즐겨찾기 단어 모음</b>
+        <div class="wordActions">
+            <button class="smallBtn" onclick="openFavoriteSet()">열기</button>
+        </div>
+    `;
+    list.appendChild(favDiv);
 
-const list=document.getElementById("setList")
+    sets.forEach((set, i) => {
+        const div = document.createElement("div");
+        div.className = "wordCard";
+        div.innerHTML = `
+            <b>${set.name}</b>
+            <div class="wordActions">
+                <button class="smallBtn" onclick="openSet(${i})">열기</button>
+                <button class="smallBtn" onclick="deleteSet(${i})">삭제</button>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+}
 
-if(!list) return
-
-list.innerHTML=""
-
-sets.forEach((set,i)=>{
-
-const div=document.createElement("div")
-
-div.className="wordCard"
-
-div.innerHTML=`
-
-<b>${set.name}</b>
-
-<div class="wordActions">
-
-<button class="smallBtn" onclick="openSet(${i})">열기</button>
-
-<button class="smallBtn" onclick="deleteSet(${i})">삭제</button>
-
-</div>
-
-`
-
-list.appendChild(div)
-
-})
-
+function openFavoriteSet() {
+    currentSetIndex = "fav";
+    document.getElementById("currentSetTitle").innerText = "★ 즐겨찾기 단어 모음";
+    document.getElementById("wordSection").style.display = "block";
+    
+    loadWords();
 }
 
 function addSet(){
