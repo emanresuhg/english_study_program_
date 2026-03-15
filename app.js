@@ -350,22 +350,23 @@ loadWords()
 
 }
 
-function toggleFavorite(i){
+function toggleFavorite(i) {
+    const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
+    
+    if (currentSetIndex === "fav") {
+        alert("즐겨찾기 모음에서는 별표를 끌 수 없습니다. 원본 세트에서 변경해주세요!");
+        return;
+    }
 
-const sets=JSON.parse(localStorage.getItem("wordSets"))||[]
+    const word = sets[currentSetIndex].words[i];
+    word.favorite = !word.favorite;
+    
+    localStorage.setItem("wordSets", JSON.stringify(sets));
 
-const word=sets[currentSetIndex].words[i]
-
-word.favorite=!word.favorite
-
-localStorage.setItem("wordSets",JSON.stringify(sets))
-
-const starBtn=document.getElementById("fav-"+i)
-
-if(starBtn){
-starBtn.innerText=word.favorite?"★":"☆"
-}
-
+    const starBtn = document.getElementById("favBtn-" + i);
+    if (starBtn) {
+        starBtn.innerText = word.favorite ? "★" : "☆";
+    }
 }
 
 function speakWord(word){
