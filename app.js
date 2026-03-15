@@ -276,22 +276,81 @@ function showQuestion() {
     startTimer();
 }
 
+// [교체] 정답 제출 로직: 순서/공백/대소문자 무시 버전
 function submitAnswer() {
     clearInterval(timerInterval);
+
     const type = document.getElementById("testType").value;
     const word = testWords[currentQuestion];
     const userAnswer = document.getElementById("answerInput").value.trim();
-    let isCorrect = (type === "meaning") ? 
-        (word.mean.every(m => userAnswer.split(",").map(u=>u.trim()).includes(m)) && word.mean.length === userAnswer.split(",").length) : 
-        (userAnswer.toLowerCase() === word.eng.toLowerCase());
 
-    if (isCorrect) { correctCount++; recordQuestion("word", true, word.eng); } 
-    else {
-        recordQuestion("word", false, word.eng);
-        wrongWords.push({ question: word.eng, correct: word.mean.join(", "), user: userAnswer || "(무응답)" });
-        alert(`오답! 정답: ${type === 'meaning' ? word.mean.join(", ") : word.eng}`);
+    let isCorrect = false;
+
+    if (type === "meaning") {
+        // 1. 사용자가 입력한 뜻들을 정리 (쉼표 기준 분리 -> 공백 제거 -> 소문자 변환)
+        const userMeans = userAnswer.split(",")
+                                    .map(m => m.trim().toLowerCase())
+                                    .filter(m => m !== "");
+        
+        // 2. 실제 정답 뜻들을 정리
+        const correctMeans = word.mean.map(m => m.trim().toLowerCase());
+
+        // 3. 비교: 개수가 같고, 모든 정답이 사용자 입력에 포함되어 있는지 확인 (순서 무관)
+        isCorrect = (userMeans.length === correctMeans.length && 
+                     correctMeans.every(m => userMeans.includes(m)));
+    } else {
+        // 스펠링 검사 (대소문자/공백 무시)
+        isCorrect = (userAnswer.toLowerCase() === word.eng.toLowerCase());
     }
-    currentQuestion++; showQuestion();
+
+    if (isCorrect) {
+        correctCount++;
+        recordQuestion("word", true, word.eng);
+        showFeedback(true); // "정답!" 표시
+    } else {
+        recordQuestion("word", false, word.eng);
+        wrongWords.push({
+            question: word.eng,
+            correct: word.mean.join(", "),
+            user: userAnswer || "(무응답)"
+        });
+        // 오답일 때는 정답이 무엇인지도 피드백에 포함
+        const correctMsg = type === 'meaning' ? word.mean.join(", ") : word.eng;
+        showFeedback(false, correctMsg); 
+    }
+
+    // 피드백을 보여주는 동안 잠깐 대기 후 다음 문제로 (약 1.2초)
+    setTimeout(() => {
+        currentQuestion++;
+        showQuestion();
+    }, 1200);
+}
+
+// [추가] 화면에 정답/오답 메시지를 띄워주는 함수
+function showFeedback(isCorrect, msg = "") {
+    let feedbackEl = document.getElementById("testFeedback");
+    
+    // 요소가 없으면 새로 생성 (최초 1회)
+    if (!feedbackEl) {
+        feedbackEl = document.createElement("div");
+        feedbackEl.id = "testFeedback";
+        document.body.appendChild(feedbackEl);
+    }
+
+    if (isCorrect) {
+        feedbackEl.innerText = "정답입니다!";
+        feedbackEl.style.backgroundColor = "rgba(40, 167, 69, 0.9)"; // 초록색
+    } else {
+        feedbackEl.innerText = `오답: ${msg}`;
+        feedbackEl.style.backgroundColor = "rgba(220, 53, 69, 0.9)"; // 빨간색
+    }
+
+    feedbackEl.style.display = "block";
+
+    // 1초 후에 사라짐
+    setTimeout(() => {
+        feedbackEl.style.display = "none";
+    }, 1000);
 }
 
 function endTest() {
