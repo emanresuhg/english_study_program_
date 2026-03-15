@@ -7,6 +7,7 @@ let wrongWords = [];
 let timerInterval;
 let timeLeft = 10;
 let studyStartTime = null; // 이것도 추가!
+let currentSetIndex = null;
 
 function goHome(){
 location.href="../index.html"
