@@ -13,13 +13,9 @@ let passageCorrect = 0;
 let blankAnswers = [];
 let currentWrongType = 'all';
 
-function goHome() {
-    location.href = "../index.html";
-}
-
-function goBack() {
-    history.back();
-}
+// --- 기본 유틸리티 ---
+function goHome() { location.href = "../index.html"; }
+function goBack() { history.back(); }
 
 function getStats() {
     return JSON.parse(localStorage.getItem("stats")) || {
@@ -30,19 +26,16 @@ function getStats() {
     };
 }
 
-function saveStats(stats) {
-    localStorage.setItem("stats", JSON.stringify(stats));
-}
+function saveStats(stats) { localStorage.setItem("stats", JSON.stringify(stats)); }
 
 function recordStudy() {
     let stats = getStats();
     const today = new Date().toISOString().slice(0, 10);
-    if (!stats.studyDates.includes(today)) {
-        stats.studyDates.push(today);
-    }
+    if (!stats.studyDates.includes(today)) { stats.studyDates.push(today); }
     saveStats(stats);
 }
 
+// --- 오답 기록 로직 (단어/지문 통합) ---
 function recordQuestion(type, correct, question, userAns = "") {
     let stats = getStats();
     stats.totalQuestions++;
@@ -50,11 +43,9 @@ function recordQuestion(type, correct, question, userAns = "") {
 
     if (!correct && type === "word") {
         let notes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
-        const testType = document.getElementById("testType").value; // 'meaning' 또는 'spelling'
-        
+        const testType = document.getElementById("testType").value;
         let category = (testType === "meaning") ? "wordMeaning" : "wordSpelling";
         const wordObj = testWords[currentQuestion];
-        
         const correctAnswer = (testType === "meaning") ? wordObj.mean.join(", ") : wordObj.eng;
 
         notes.push({
@@ -65,40 +56,28 @@ function recordQuestion(type, correct, question, userAns = "") {
         });
         localStorage.setItem("wrongNotes", JSON.stringify(notes));
     }
-    
     saveStats(stats);
 }
 
-function loadStats() {
-    let stats = getStats();
-    if (!document.getElementById("totalQuestions")) return;
+// 지문 전용 오답 저장
+function savePassageWrongNote(entireText, fullWord, cleanAnswer, userAnswer) {
+    let notes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
+    const sentences = entireText.split(/[.!?]\s/);
+    let targetSentence = sentences.find(s => s.includes(fullWord)) || "문장을 찾을 수 없음";
+    const reviewQuestion = targetSentence.replace(fullWord, " ( ___ ) ");
 
-    document.getElementById("totalQuestions").textContent = stats.totalQuestions;
-    document.getElementById("totalCorrect").textContent = stats.totalCorrect;
-    let rate = stats.totalQuestions > 0 ? Math.round((stats.totalCorrect / stats.totalQuestions) * 100) : 0;
-    document.getElementById("totalRate").textContent = rate + "%";
-
-    let wordRate = stats.wordQuestions > 0 ? Math.round((stats.wordCorrect / stats.wordQuestions) * 100) : 0;
-    document.getElementById("wordRate").textContent = wordRate + "%";
-
-    let passageRate = stats.passageQuestions > 0 ? Math.round((stats.passageCorrect / stats.passageQuestions) * 100) : 0;
-    document.getElementById("passageRate").textContent = passageRate + "%";
-
-    let mostWrong = "없음", max = 0;
-    for (let w in stats.wrongWords) {
-        if (stats.wrongWords[w] > max) { max = stats.wrongWords[w]; mostWrong = w; }
-    }
-    document.getElementById("mostWrongWord").textContent = mostWrong;
-
-    let mostPassage = "없음", pMax = 0;
-    for (let p in stats.passageStudy) {
-        if (stats.passageStudy[p] > pMax) { pMax = stats.passageStudy[p]; mostPassage = p; }
-    }
-    document.getElementById("mostPassage").textContent = mostPassage;
-    document.getElementById("studyDays").textContent = stats.studyDates.length;
-    document.getElementById("studyTime").textContent = stats.studyMinutes || 0;
+    notes.push({
+        type: "passageBlank",
+        question: reviewQuestion.trim(), // 목록 보기용 (문장 단위)
+        fullText: entireText,           // 재시험용 (지문 전체)
+        targetWord: fullWord,           // 재시험 시 빈칸 위치 찾기용
+        correct: cleanAnswer,
+        user: userAnswer || "(무응답)"
+    });
+    localStorage.setItem("wrongNotes", JSON.stringify(notes));
 }
 
+// --- 단어 세트 관리 ---
 function loadSets() {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
     const list = document.getElementById("setList");
@@ -121,7 +100,7 @@ function loadSets() {
 function openFavoriteSet() {
     currentSetIndex = "fav";
     document.getElementById("currentSetTitle").innerText = "★ 즐겨찾기 단어 모음";
-    document.getElementById("wordSection").style.display = "block";
+    if(document.getElementById("wordSection")) document.getElementById("wordSection").style.display = "block";
     loadWords();
 }
 
@@ -129,7 +108,7 @@ function openSet(i) {
     currentSetIndex = i;
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
     document.getElementById("currentSetTitle").innerText = sets[i].name;
-    document.getElementById("wordSection").style.display = "block";
+    if(document.getElementById("wordSection")) document.getElementById("wordSection").style.display = "block";
     loadWords();
 }
 
@@ -211,20 +190,6 @@ function deleteWord(i) {
     loadWords();
 }
 
-function searchWords() {
-    const keyword = document.getElementById("wordSearch").value.toLowerCase();
-    const list = document.getElementById("wordList");
-    if (!list) return;
-    list.innerHTML = "";
-    displayedWords.forEach((w, i) => {
-        if (!w.eng.toLowerCase().includes(keyword) && !w.mean.join(" ").toLowerCase().includes(keyword)) return;
-        const div = document.createElement("div");
-        div.className = "wordCard";
-        div.innerHTML = `<b>${w.eng}</b> : ${w.mean.join(", ")}<div class="wordActions"><button class="smallBtn" onclick="speakWord('${w.eng}')">🔊</button><button class="smallBtn" id="favBtn-${i}" onclick="toggleFavorite(${i})">${w.favorite ? "★" : "☆"}</button><button class="smallBtn" onclick="deleteWord(${i})">삭제</button></div>`;
-        list.appendChild(div);
-    });
-}
-
 function speakWord(word) {
     speechSynthesis.cancel();
     const msg = new SpeechSynthesisUtterance(word);
@@ -233,6 +198,7 @@ function speakWord(word) {
     speechSynthesis.speak(msg);
 }
 
+// --- 단어 테스트 ---
 function loadTestSets() {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
     const container = document.getElementById("setSelection");
@@ -244,13 +210,6 @@ function loadTestSets() {
         div.setAttribute("data-name", set.name.toLowerCase());
         div.innerHTML = `<label><input type="checkbox" value="${i}"> ${set.name}</label>`;
         container.appendChild(div);
-    });
-}
-
-function filterTestSets() {
-    const query = document.getElementById("setSearchInput").value.toLowerCase();
-    document.querySelectorAll(".setItem").forEach(item => {
-        item.style.display = item.getAttribute("data-name").includes(query) ? "block" : "none";
     });
 }
 
@@ -280,22 +239,15 @@ function showQuestion() {
 
 function submitAnswer() {
     clearInterval(timerInterval);
-
     const type = document.getElementById("testType").value;
     const word = testWords[currentQuestion];
     const userAnswer = document.getElementById("answerInput").value.trim();
 
     let isCorrect = false;
-
     if (type === "meaning") {
-        const userMeans = userAnswer.split(",")
-                                    .map(m => m.trim().toLowerCase())
-                                    .filter(m => m !== "");
-        
+        const userMeans = userAnswer.split(",").map(m => m.trim().toLowerCase()).filter(m => m !== "");
         const correctMeans = word.mean.map(m => m.trim().toLowerCase());
-
-        isCorrect = (userMeans.length === correctMeans.length && 
-                     correctMeans.every(m => userMeans.includes(m)));
+        isCorrect = (userMeans.length === correctMeans.length && correctMeans.every(m => userMeans.includes(m)));
     } else {
         isCorrect = (userAnswer.toLowerCase() === word.eng.toLowerCase());
     }
@@ -303,14 +255,9 @@ function submitAnswer() {
     if (isCorrect) {
         correctCount++;
         recordQuestion("word", true, word.eng);
-        showFeedback(true); // "정답!" 표시
+        showFeedback(true);
     } else {
-        recordQuestion("word", false, word.eng);
-        wrongWords.push({
-            question: word.eng,
-            correct: word.mean.join(", "),
-            user: userAnswer || "(무응답)"
-        });
+        recordQuestion("word", false, word.eng, userAnswer);
         const correctMsg = type === 'meaning' ? word.mean.join(", ") : word.eng;
         showFeedback(false, correctMsg); 
     }
@@ -323,48 +270,35 @@ function submitAnswer() {
 
 function showFeedback(isCorrect, msg = "") {
     let feedbackEl = document.getElementById("testFeedback");
-    
     if (!feedbackEl) {
         feedbackEl = document.createElement("div");
         feedbackEl.id = "testFeedback";
         document.body.appendChild(feedbackEl);
     }
-
-    if (isCorrect) {
-        feedbackEl.innerText = "정답입니다!";
-        feedbackEl.style.backgroundColor = "rgba(40, 167, 69, 0.9)"; // 초록색
-    } else {
-        feedbackEl.innerText = `오답: ${msg}`;
-        feedbackEl.style.backgroundColor = "rgba(220, 53, 69, 0.9)"; // 빨간색
-    }
-
+    feedbackEl.innerText = isCorrect ? "정답입니다!" : `오답: ${msg}`;
+    feedbackEl.style.backgroundColor = isCorrect ? "rgba(40, 167, 69, 0.9)" : "rgba(220, 53, 69, 0.9)";
     feedbackEl.style.display = "block";
-
-    setTimeout(() => {
-        feedbackEl.style.display = "none";
-    }, 1000);
+    setTimeout(() => { feedbackEl.style.display = "none"; }, 1000);
 }
 
 function endTest() {
     endStudySession();
     document.getElementById("testArea").style.display = "none";
-    document.getElementById("resultArea").innerHTML = `<h2>테스트 종료</h2><p>정답률: ${correctCount}/${testWords.length}</p>`;
-    saveWrongNotes();
+    document.getElementById("resultArea").innerHTML = `<h2>테스트 종료</h2><p>정답률: ${correctCount}/${testWords.length}</p><button class="mainBtn" onclick="location.reload()">돌아가기</button>`;
 }
 
+// --- 지문 관리 ---
 function loadPassages() {
     const passages = JSON.parse(localStorage.getItem("passages")) || [];
     const list = document.getElementById("passageList");
     if (!list) return;
     list.innerHTML = "";
-    passages.forEach((p, i) => renderPassageCard(p, i, list));
-}
-
-function renderPassageCard(p, i, container) {
-    const div = document.createElement("div");
-    div.className = "wordCard";
-    div.innerHTML = `<div><b>${p.title}</b></div><div class="wordActions"><button class="smallBtn" onclick="openPassage(${i})">열기</button><button class="smallBtn" onclick="deletePassage(${i})">삭제</button></div>`;
-    container.appendChild(div);
+    passages.forEach((p, i) => {
+        const div = document.createElement("div");
+        div.className = "wordCard";
+        div.innerHTML = `<div><b>${p.title}</b></div><div class="wordActions"><button class="smallBtn" onclick="openPassage(${i})">열기</button><button class="smallBtn" onclick="deletePassage(${i})">삭제</button></div>`;
+        list.appendChild(div);
+    });
 }
 
 function openPassage(i) {
@@ -376,21 +310,6 @@ function openPassage(i) {
     document.getElementById("viewTranslation").innerText = p.translation || "해석 없음";
     document.getElementById("passageViewSection").style.display = "block";
     document.getElementById("passageViewSection").scrollIntoView({ behavior: 'smooth' });
-}
-
-function closePassage() {
-    document.getElementById("passageViewSection").style.display = "none";
-}
-
-function searchPassages() {
-    const keyword = document.getElementById("passageSearch").value.toLowerCase();
-    const passages = JSON.parse(localStorage.getItem("passages")) || [];
-    const list = document.getElementById("passageList");
-    if (!list) return;
-    list.innerHTML = "";
-    passages.forEach((p, i) => {
-        if (p.title.toLowerCase().includes(keyword)) renderPassageCard(p, i, list);
-    });
 }
 
 function addPassage() {
@@ -412,6 +331,73 @@ function deletePassage(i) {
     loadPassages();
 }
 
+// --- 지문 테스트 ---
+function showPassageQuestion() {
+    if (currentPassageIndex >= testPassages.length) { endPassageTest(); return; }
+    const p = testPassages[currentPassageIndex];
+    const qContainer = document.getElementById("passageQuestion");
+    const tContainer = document.getElementById("passageTranslationView");
+    const opt = document.getElementById("showTranslationOpt");
+    if (!qContainer) return;
+
+    qContainer.innerHTML = ""; 
+    if (tContainer) {
+        tContainer.innerText = `[해석] ${p.translation || '해석 정보가 없습니다.'}`;
+        tContainer.style.display = (opt && opt.checked) ? "block" : "none";
+    }
+
+    const allWords = p.text.trim().split(/\s+/); 
+    const removeCount = Math.max(1, Math.floor(allWords.length * 0.15));
+    let indexes = [];
+    while (indexes.length < removeCount) {
+        let r = Math.floor(Math.random() * allWords.length);
+        if (!indexes.includes(r)) indexes.push(r);
+    }
+
+    blankAnswers = [];
+    const htmlContent = allWords.map((word, i) => {
+        if (indexes.includes(i)) {
+            const cleanWord = word.replace(/[^a-zA-Z0-9]/g, "");
+            const punctuation = word.replace(cleanWord, ""); 
+            blankAnswers.push(cleanWord);
+            return `<input type="text" class="passage-input" data-answer="${cleanWord}" data-fullword="${word}" style="width:${Math.max(cleanWord.length * 15, 50)}px;">${punctuation}`;
+        }
+        return `<span>${word}</span>`;
+    }).join(" ");
+
+    qContainer.innerHTML = htmlContent;
+}
+
+function submitPassageAnswer() {
+    const inputs = document.querySelectorAll(".passage-input");
+    if (inputs.length === 0) return;
+    let correctInThisPassage = 0;
+    const p = testPassages[currentPassageIndex];
+
+    inputs.forEach(input => {
+        const userAnswer = input.value.trim().toLowerCase();
+        const correctAnswer = input.getAttribute("data-answer").toLowerCase();
+        const fullWord = input.getAttribute("data-fullword");
+
+        if (userAnswer === correctAnswer) {
+            input.style.borderBottom = "2px solid #28a745";
+            input.style.color = "#28a745";
+            correctInThisPassage++;
+        } else {
+            input.style.borderBottom = "2px solid #dc3545";
+            input.style.color = "#dc3545";
+            input.value = fullWord;
+            savePassageWrongNote(p.text, fullWord, correctAnswer, userAnswer);
+        }
+        input.disabled = true;
+    });
+
+    passageCorrect += correctInThisPassage;
+    const resultDiv = document.getElementById("passageResult");
+    if (resultDiv) resultDiv.innerHTML = `결과: <span style="color:#28a745">${correctInThisPassage}</span> / <span>${inputs.length}</span> 맞힘`;
+}
+
+// --- 공통 기능 ---
 function startTimer() {
     timeLeft = 10;
     const timer = document.getElementById("timer");
@@ -441,214 +427,25 @@ function endStudySession() {
     studyStartTime = null;
 }
 
-function showPassageQuestion() {
-    if (currentPassageIndex >= testPassages.length) {
-        endPassageTest();
-        return;
-    }
-
-    const p = testPassages[currentPassageIndex];
-    const qContainer = document.getElementById("passageQuestion");
-    const tContainer = document.getElementById("passageTranslationView");
-    const opt = document.getElementById("showTranslationOpt");
-
-    if (!qContainer) return;
-
-    qContainer.innerHTML = ""; 
-    if (tContainer) {
-        tContainer.innerText = `[해석] ${p.translation || '해석 정보가 없습니다.'}`;
-        tContainer.style.display = (opt && opt.checked) ? "block" : "none";
-    }
-
-    const allWords = p.text.trim().split(/\s+/); 
-    
-    const removeCount = Math.max(1, Math.floor(allWords.length * 0.15));
-    let indexes = [];
-    while (indexes.length < removeCount) {
-        let r = Math.floor(Math.random() * allWords.length);
-        if (!indexes.includes(r)) indexes.push(r);
-    }
-
-    blankAnswers = [];
-    const htmlContent = allWords.map((word, i) => {
-        if (indexes.includes(i)) {
-            const cleanWord = word.replace(/[^a-zA-Z0-9]/g, "");
-            const punctuation = word.replace(cleanWord, ""); 
-            
-            blankAnswers.push(cleanWord);
-            
-            return `<input type="text" class="passage-input" 
-                           data-answer="${cleanWord}" 
-                           data-fullword="${word}"
-                           style="width:${Math.max(cleanWord.length * 15, 50)}px;">${punctuation}`;
-        }
-        return `<span>${word}</span>`;
-    }).join(" ");
-
-    qContainer.innerHTML = htmlContent;
-    
-    const resultDiv = document.getElementById("passageResult");
-    if (resultDiv) resultDiv.innerText = "";
-}
-
-function submitPassageAnswer() {
-    const inputs = document.querySelectorAll(".passage-input");
-    if (inputs.length === 0) return;
-
-    let correctInThisPassage = 0;
-    const totalInThisPassage = inputs.length;
-    const p = testPassages[currentPassageIndex];
-
-    inputs.forEach(input => {
-        const userAnswer = input.value.trim().toLowerCase();
-        const correctAnswer = input.getAttribute("data-answer").toLowerCase();
-        const fullWord = input.getAttribute("data-fullword");
-
-        if (userAnswer === correctAnswer) {
-            input.style.borderBottom = "2px solid #28a745";
-            input.style.color = "#28a745";
-            input.style.fontWeight = "bold";
-            correctInThisPassage++;
-        } else {
-            input.style.borderBottom = "2px solid #dc3545";
-            input.style.color = "#dc3545";
-            input.value = fullWord;
-            savePassageWrongNote(p.text, fullWord, correctAnswer, userAnswer);
-        }
-        input.disabled = true;
-    });
-
-    passageCorrect += correctInThisPassage;
-    const resultDiv = document.getElementById("passageResult");
-    if (resultDiv) {
-        resultDiv.innerHTML = `결과: <span style="color:#28a745">${correctInThisPassage}</span> / <span>${totalInThisPassage}</span> 맞힘`;
-    }
-}
-
-function savePassageWrongNote(entireText, fullWord, cleanAnswer, userAnswer) {
-    let notes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
-    
-    const sentences = entireText.split(/[.!?]\s/);
-    let targetSentence = sentences.find(s => s.includes(fullWord)) || "문장을 찾을 수 없음";
-    
-    const questionSentence = targetSentence.replace(fullWord, " ( ____ ) ");
-
-    notes.push({
-        type: "passageBlank",
-        question: questionSentence.trim(),
-        correct: cleanAnswer,
-        user: userAnswer || "(무응답)"
-    });
-    
-    localStorage.setItem("wrongNotes", JSON.stringify(notes));
-}
-
-function toggleTranslation() {
-    const tContainer = document.getElementById("passageTranslationView");
-    const opt = document.getElementById("showTranslationOpt");
-    if (tContainer && opt) {
-        tContainer.style.display = opt.checked ? "block" : "none";
-    }
-}
-
-function endPassageTest() {
-    endStudySession();
-
-    document.getElementById("passageTestArea").style.display = "none";
-
-    const result = document.getElementById("passageResult");
-    if (result) {
-        result.innerHTML = `
-            <div style="text-align:center; padding:20px; border:2px solid #333; border-radius:15px; background:#fff;">
-                <h2>테스트 종료</h2>
-                <p style="font-size:1.5rem; margin:20px 0;">
-                    총 맞힌 빈칸 개수: <span style="color:blue; font-weight:bold;">${passageCorrect}</span> 개
-                </p>
-                <button class="mainBtn" onclick="location.reload()">처음으로 돌아가기</button>
-            </div>
-        `;
-    }
-}
-
-function nextPassage() {
-    currentPassageIndex++;
-    showPassageQuestion();
-}
-
-function loadPassageSelection() {
-    const passages = JSON.parse(localStorage.getItem("passages")) || [];
-    const container = document.getElementById("passageSelection");
-    
-    if (!container) return; 
-
-    container.innerHTML = "";
-    
-    if (passages.length === 0) {
-        container.innerHTML = "<p style='padding:10px;'>등록된 지문이 없습니다.</p>";
-        return;
-    }
-
-    passages.forEach((p, i) => {
-        const div = document.createElement("div");
-        div.className = "setItem";
-        div.innerHTML = `
-            <label>
-                <input type="checkbox" value="${i}"> ${p.title}
-            </label>
-        `;
-        container.appendChild(div);
-    });
-}
-
-function startPassageTest() {
-    const checks = document.querySelectorAll("#passageSelection input:checked");
-    const passages = JSON.parse(localStorage.getItem("passages")) || [];
-    
-    testPassages = [];
-    checks.forEach(c => {
-        testPassages.push(passages[c.value]);
-    });
-
-    if (testPassages.length === 0) {
-        alert("테스트할 지문을 하나 이상 선택하세요.");
-        return;
-    }
-
-    startStudySession();
-    shuffleArray(testPassages);
-    currentPassageIndex = 0;
-    passageCorrect = 0;
-
-    document.getElementById("setupArea").style.display = "none"; 
-    const testArea = document.getElementById("passageTestArea");
-    if (testArea) testArea.style.display = "block";
-    
-    showPassageQuestion();
-}
-
-let wrongNotes = [];
+// --- 오답노트 관리 ---
 let currentWrongTestIndex = 0;
 let wrongTestWords = [];
 
 function loadWrongNotes() {
-    wrongNotes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
+    const notes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
     const typeFilter = document.getElementById("wrongTypeFilter").value;
     const listContainer = document.getElementById("wrongNoteList");
-    
     if (!listContainer) return;
     listContainer.innerHTML = "";
 
-    const filtered = wrongNotes.filter(n => {
-        if (typeFilter === "all") return true;
-        return n.type === typeFilter;
-    });
+    const filtered = notes.filter(n => typeFilter === "all" || n.type === typeFilter);
 
     if (filtered.length === 0) {
         listContainer.innerHTML = "<p style='padding:20px;'>해당 카테고리에 오답이 없습니다.</p>";
         return;
     }
 
-    filtered.forEach((n, index) => {
+    filtered.forEach((n) => {
         const div = document.createElement("div");
         div.className = "wordCard";
         div.innerHTML = `
@@ -661,48 +458,76 @@ function loadWrongNotes() {
         `;
         listContainer.appendChild(div);
     });
+
+    // 오답노트 초기화 버튼 추가 (목록 하단)
+    const resetBtn = document.createElement("button");
+    resetBtn.innerText = "오답노트 전체 초기화";
+    resetBtn.className = "smallBtn";
+    resetBtn.style = "margin: 20px auto; display: block; background: #dc3545; color: white; opacity: 0.7;";
+    resetBtn.onclick = resetWrongNotes;
+    listContainer.appendChild(resetBtn);
+}
+
+function resetWrongNotes() {
+    if (confirm("정말로 모든 오답노트를 삭제하시겠습니까?")) {
+        localStorage.removeItem("wrongNotes");
+        loadWrongNotes();
+    }
 }
 
 function startWrongNoteTest() {
     const typeFilter = document.getElementById("wrongTypeFilter").value;
-    wrongNotes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
-    
-    wrongTestWords = wrongNotes.filter(n => {
-        if (typeFilter === "all") return true;
-        return n.type === typeFilter;
-    });
+    const notes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
+    wrongTestWords = notes.filter(n => typeFilter === "all" || n.type === typeFilter);
 
-    if (wrongTestWords.length === 0) {
-        alert("재시험을 볼 문제가 없습니다.");
-        return;
-    }
+    if (wrongTestWords.length === 0) { alert("문제가 없습니다."); return; }
 
     shuffleArray(wrongTestWords);
     currentWrongTestIndex = 0;
-    
     document.getElementById("wrongNoteListSection").style.display = "none";
     document.getElementById("wrongTestArea").style.display = "block";
-    
     showNextWrongQuestion();
 }
 
 function showNextWrongQuestion() {
     if (currentWrongTestIndex >= wrongTestWords.length) {
-        alert("재시험이 완료되었습니다!");
+        alert("재시험 완료!");
         location.reload();
         return;
     }
 
     const q = wrongTestWords[currentWrongTestIndex];
-    document.getElementById("wrongQuestionText").innerText = `(${currentWrongTestIndex + 1}/${wrongTestWords.length}) ${q.question}`;
-    document.getElementById("wrongAnswerInput").value = "";
-    document.getElementById("wrongAnswerInput").focus();
+    const qTextEl = document.getElementById("wrongQuestionText");
+    const inputEl = document.getElementById("wrongAnswerInput");
+
+    if (q.type === "passageBlank") {
+        // 지문 전체 로직
+        const displayHTML = q.fullText.replace(q.targetWord, 
+            `<input type="text" id="innerWrongInput" class="passage-input" 
+                    style="width:${q.correct.length * 15}px; border-bottom:2px solid #007bff; outline:none;">`
+        );
+        qTextEl.innerHTML = `<div style="text-align:left; line-height:2;">${displayHTML}</div>`;
+        inputEl.style.display = "none"; 
+        
+        setTimeout(() => {
+            const inner = document.getElementById("innerWrongInput");
+            if(inner) {
+                inner.focus();
+                inner.addEventListener("keydown", (e) => { if(e.key === "Enter") submitWrongTestAnswer(); });
+            }
+        }, 50);
+    } else {
+        qTextEl.innerText = `(${currentWrongTestIndex + 1}/${wrongTestWords.length}) ${q.question}`;
+        inputEl.style.display = "inline-block";
+        inputEl.value = "";
+        inputEl.focus();
+    }
 }
 
 function submitWrongTestAnswer() {
-    const userInput = document.getElementById("wrongAnswerInput").value.trim().toLowerCase();
+    const inner = document.getElementById("innerWrongInput");
+    const userInput = (inner ? inner.value : document.getElementById("wrongAnswerInput").value).trim().toLowerCase();
     const currentQ = wrongTestWords[currentWrongTestIndex];
-    
     let isCorrect = false;
 
     if (currentQ.type === "wordMeaning") {
@@ -730,17 +555,19 @@ function submitWrongTestAnswer() {
     }, 1200);
 }
 
+// --- 초기화 ---
 document.addEventListener("DOMContentLoaded", () => {
-    if (typeof loadPassageSelection === 'function') loadPassageSelection();
-    if (typeof loadWrongNotes === 'function') loadWrongNotes();
+    if (document.getElementById("setList")) loadSets();
+    if (document.getElementById("setSelection")) loadTestSets();
+    if (document.getElementById("passageList")) loadPassages();
+    if (document.getElementById("passageSelection")) loadPassageSelection();
+    if (document.getElementById("wrongNoteList")) loadWrongNotes();
+
     const bindEnter = (id, action) => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener("keydown", (e) => { 
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    action(); 
-                }
+                if (e.key === "Enter") { e.preventDefault(); action(); }
             });
         }
     };
