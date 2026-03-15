@@ -521,9 +521,6 @@ startTimer()
 
 }
 
-function submitAnswer(){
-
-// app.js 내 submitAnswer 수정 제안
 function submitAnswer() {
     clearInterval(timerInterval);
     const type = document.getElementById("testType").value;
