@@ -843,18 +843,7 @@ function searchPassages() {
 
     passages.forEach((p, i) => {
         if (!p.title.toLowerCase().includes(keyword)) return;
-
-        const div = document.createElement("div");
-        div.className = "wordCard";
-        div.innerHTML = `
-            <div onclick="alert('주제: ${p.topic || '없음'}\\n\\n${p.text}')" style="cursor:pointer">
-                <b>${p.title}</b>
-            </div>
-            <div class="wordActions">
-                <button class="smallBtn" onclick="deletePassage(${i})">삭제</button>
-            </div>
-        `;
-        list.appendChild(div);
+        renderPassageCard(p, i, list);
     });
 }
 
@@ -1059,18 +1048,23 @@ function loadPassages() {
     list.innerHTML = "";
 
     passages.forEach((p, i) => {
-        const div = document.createElement("div");
-        div.className = "wordCard";
-        div.innerHTML = `
-            <div onclick="alert('주제: ${p.topic || '없음'}\\n\\n${p.text}')" style="cursor:pointer">
-                <b>${p.title}</b>
-            </div>
-            <div class="wordActions">
-                <button class="smallBtn" onclick="deletePassage(${i})">삭제</button>
-            </div>
-        `;
-        list.appendChild(div);
+        renderPassageCard(p, i, list);
     });
+}
+
+function renderPassageCard(p, i, container) {
+    const div = document.createElement("div");
+    div.className = "wordCard";
+    div.innerHTML = `
+        <div>
+            <b>${p.title}</b>
+        </div>
+        <div class="wordActions">
+            <button class="smallBtn" onclick="openPassage(${i})">열기</button>
+            <button class="smallBtn" onclick="deletePassage(${i})">삭제</button>
+        </div>
+    `;
+    container.appendChild(div);
 }
 
 function deletePassage(i) {
@@ -1134,4 +1128,22 @@ function showWrong(type) {
         `;
         list.appendChild(div);
     });
+}
+
+function openPassage(i) {
+    const passages = JSON.parse(localStorage.getItem("passages")) || [];
+    const p = passages[i];
+
+    document.getElementById("viewTitle").innerText = p.title;
+    document.getElementById("viewTopic").innerText = p.topic || "없음";
+    document.getElementById("viewText").innerText = p.text;
+    document.getElementById("viewTranslation").innerText = p.translation || "해석 없음";
+
+    document.getElementById("passageViewSection").style.display = "block";
+    
+    document.getElementById("passageViewSection").scrollIntoView({ behavior: 'smooth' });
+}
+
+function closePassage() {
+    document.getElementById("passageViewSection").style.display = "none";
 }
