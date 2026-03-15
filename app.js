@@ -1159,26 +1159,33 @@ bindEnter("passageAnswer",submitPassageAnswer)
 
 document.addEventListener("DOMContentLoaded",enableEnterSystem)
 
-function loadPassages(){
+function loadPassages() {
+    const passages = JSON.parse(localStorage.getItem("passages")) || [];
+    const list = document.getElementById("passageList");
+    if(!list) return;
+    list.innerHTML = "";
 
-const passages = JSON.parse(localStorage.getItem("passages")) || []
+    passages.forEach((p, i) => {
+        const div = document.createElement("div");
+        div.className = "wordCard";
+        div.innerHTML = `
+            <div onclick="alert('주제: ${p.topic || '없음'}\\n\\n${p.text}')" style="cursor:pointer">
+                <b>${p.title}</b>
+            </div>
+            <div class="wordActions">
+                <button class="smallBtn" onclick="deletePassage(${i})">삭제</button>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+}
 
-const list = document.getElementById("passageList")
-
-if(!list) return
-
-list.innerHTML=""
-
-passages.forEach(p=>{
-
-const div=document.createElement("div")
-
-div.innerHTML=p.title
-
-list.appendChild(div)
-
-})
-
+function deletePassage(i) {
+    if(!confirm("정말 삭제하시겠습니까?")) return;
+    const passages = JSON.parse(localStorage.getItem("passages")) || [];
+    passages.splice(i, 1);
+    localStorage.setItem("passages", JSON.stringify(passages));
+    loadPassages();
 }
 
 
