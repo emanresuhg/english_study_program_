@@ -738,31 +738,26 @@ recordQuestion("passage",true,p.title)
 
 const q=document.getElementById("passageQuestion")
 
-if(type==="blank"){
+if (type === "blank") {
+    const words = p.text.split(" ");
+    const removeCount = Math.floor(words.length / 8);
+    let indexes = [];
+    while (indexes.length < removeCount) {
+        let r = Math.floor(Math.random() * words.length);
+        if (!indexes.includes(r)) indexes.push(r);
+    }
 
-const words=p.text.split(" ")
+    blankAnswers = [];
+    const htmlContent = words.map((word, i) => {
+        if (indexes.includes(i)) {
+            blankAnswers.push(word);
+            return `<input type="text" class="inline-input" data-index="${blankAnswers.length - 1}" style="width:${word.length * 10 + 20}px">`;
+        }
+        return word;
+    }).join(" ");
 
-const removeCount=Math.floor(words.length/8)
-
-let indexes=[]
-
-while(indexes.length<removeCount){
-
-let r=Math.floor(Math.random()*words.length)
-
-if(!indexes.includes(r)) indexes.push(r)
-
-}
-
-blankAnswers=[]
-
-indexes.forEach(i=>{
-blankAnswers.push(words[i])
-words[i]="_____"
-})
-
-q.innerHTML=words.join(" ")
-
+    q.innerHTML = htmlContent;
+    document.getElementById("passageAnswer").style.display = "none";
 }else{
 
 q.innerHTML="해석:<br>"+p.translation
