@@ -439,23 +439,6 @@ function saveWrongNotes() {
     localStorage.setItem("wrongNotes", JSON.stringify(notes));
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    if (typeof loadSets === 'function') loadSets();
-    if (typeof loadPassages === 'function') loadPassages();
-    if (typeof loadStats === 'function') loadStats();
-    if (typeof loadTestSets === 'function') loadTestSets();
-    
-    if (typeof loadPassageSelection === 'function') loadPassageSelection();
-    
-    const bindEnter = (id, action) => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener("keydown", (e) => { if (e.key === "Enter") action(); });
-    };
-    bindEnter("englishWord", addWord);
-    bindEnter("meanings", addWord);
-    bindEnter("answerInput", submitAnswer);
-});
-
 function showPassageQuestion() {
     if (currentPassageIndex >= testPassages.length) {
         endPassageTest();
@@ -695,24 +678,70 @@ function showNextWrongQuestion() {
     document.getElementById("wrongAnswerInput").focus();
 }
 
+// [교체] 오답노트 재시험 정답 확인 (공백, 대소문자, 여러 뜻 완벽 대응)
 function submitWrongTestAnswer() {
-    const userAnswer = document.getElementById("wrongAnswerInput").value.trim().toLowerCase();
+    const userInput = document.getElementById("wrongAnswerInput").value.trim().toLowerCase();
     const currentQ = wrongTestWords[currentWrongTestIndex];
     
-    const correctAnswers = currentQ.correct.split(",").map(a => a.trim().toLowerCase());
-    const isCorrect = correctAnswers.includes(userAnswer);
+    let isCorrect = false;
+
+    // 1. 카테고리에 따른 정답 처리
+    if (currentQ.type === "wordMeaning") {
+        // 뜻이 여러 개인 경우: 쉼표로 분리하여 각 단어의 공백 제거 후 비교
+        const userMeans = userInput.split(",").map(m => m.trim()).filter(m => m !== "");
+        const correctMeans = currentQ.correct.split(",").map(m => m.trim().toLowerCase());
+
+        // 순서 상관없이 개수가 같고 모든 뜻을 포함하고 있는지 확인
+        isCorrect = (userMeans.length === correctMeans.length && 
+                     correctMeans.every(m => userMeans.includes(m)));
+    } else {
+        // 스펠링이나 지문 빈칸: 단순 문자열 비교 (공백/대소문자 무시)
+        isCorrect = (userInput === currentQ.correct.trim().toLowerCase());
+    }
 
     if (isCorrect) {
         showFeedback(true);
-        const allNotes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
+        // 맞혔으므로 전체 오답노트(localStorage)에서 제거
+        let allNotes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
+        // 질문 내용과 유형이 일치하는 항목을 제외하고 다시 저장
         const updatedNotes = allNotes.filter(n => !(n.question === currentQ.question && n.type === currentQ.type));
         localStorage.setItem("wrongNotes", JSON.stringify(updatedNotes));
     } else {
+        // 틀렸을 경우 피드백 메시지에 정답 표시
         showFeedback(false, currentQ.correct);
     }
 
+    // 다음 문제로 넘어가기 (피드백 보여준 후 1.2초 뒤)
     setTimeout(() => {
         currentWrongTestIndex++;
         showNextWrongQuestion();
     }, 1200);
 }
+
+// [수정] 페이지 로드 시 엔터키 바인딩 추가
+document.addEventListener("DOMContentLoaded", () => {
+    // ... 기존 코드들 (loadSets, loadPassages 등) ...
+    if (typeof loadPassageSelection === 'function') loadPassageSelection();
+    if (typeof loadWrongNotes === 'function') loadWrongNotes(); // 오답노트 페이지용
+
+    const bindEnter = (id, action) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener("keydown", (e) => { 
+                if (e.key === "Enter") {
+                    e.preventDefault(); // 기본 동작 방지
+                    action(); 
+                }
+            });
+        }
+    };
+
+    // 기존 단어 테스트 엔터키
+    bindEnter("answerInput", submitAnswer);
+    // 오답노트 재시험용 엔터키 추가!
+    bindEnter("wrongAnswerInput", submitWrongTestAnswer);
+    
+    // 단어 추가 시 엔터키
+    bindEnter("englishWord", addWord);
+    bindEnter("meanings", addWord);
+});
