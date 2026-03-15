@@ -5,7 +5,6 @@
     <title>지문 테스트</title>
     <link rel="stylesheet" href="../style.css">
     <style>
-        /* 지문용 추가 스타일 (style.css에 없다면 여기 유지) */
         .passage-input {
             border: none;
             border-bottom: 2px solid #333;
@@ -39,7 +38,7 @@
 <body>
 
 <header>
-    <h1>지문 빈칸 테스트</h1>
+    <h1>지문 테스트</h1>
 </header>
 
 <div class="container">
@@ -51,7 +50,7 @@
     <div style="margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px;">
         <p><b>1. 테스트 유형 선택</b></p>
         <label><input type="radio" name="passageType" value="blank" checked> 지문 빈칸 채우기</label>
-        <label style="margin-left: 15px;"><input type="radio" name="passageType" value="rewrite"> 지문 백지 복기 (전체 쓰기)</label>
+        <label style="margin-left: 15px;"><input type="radio" name="passageType" value="rewrite"> 지문 백지 복기</label>
     </div>
 
     <div style="margin-bottom: 20px;">
@@ -64,7 +63,7 @@
 
     <div id="passageTestArea" style="display:none; margin-top: 20px;">
         <div style="margin-bottom: 15px;">
-            <label><input type="checkbox" id="showTranslationOpt" onchange="toggleTranslation()"> 해석 함께 보기</label>
+            <label><input type="checkbox" id="showTranslationOpt" onclick="toggleTranslation()"> 해석 보기</label>
         </div>
 
         <div id="passageQuestion"></div>
