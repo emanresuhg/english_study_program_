@@ -1,13 +1,4 @@
 let studyStartTime=null
-// app.js 상단에 있어야 할 변수들
-let testWords = [];
-let currentQuestion = 0;
-let correctCount = 0;
-let wrongWords = [];
-let timerInterval;
-let timeLeft = 10;
-let studyStartTime = null; // 이것도 추가!
-let currentSetIndex = null;
 
 function goHome(){
 location.href="../index.html"
