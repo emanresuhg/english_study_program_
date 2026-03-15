@@ -1,57 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>지문 테스트</title>
-<link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <title>지문 테스트</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        /* 지문용 추가 스타일 (style.css에 없다면 여기 유지) */
+        .passage-input {
+            border: none;
+            border-bottom: 2px solid #333;
+            outline: none;
+            text-align: center;
+            font-size: 1rem;
+            font-family: inherit;
+            background: #f9f9f9;
+            margin: 2px 4px;
+            padding: 2px;
+        }
+        #passageQuestion {
+            line-height: 2.2;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            font-size: 1.1rem;
+            word-break: break-word;
+        }
+        #passageTranslationView {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f0f4f8;
+            border-left: 4px solid #007bff;
+            color: #444;
+            font-style: italic;
+        }
+    </style>
 </head>
-
 <body>
 
 <header>
-<h1>지문 테스트</h1>
+    <h1>지문 빈칸 테스트</h1>
 </header>
 
 <div class="container">
+    <button class="smallBtn" onclick="location.href='tests.html'">← 테스트 메뉴</button>
 
-<button onclick="location.href='tests.html'">← 테스트 메뉴</button>
+    <div id="setupArea">
+        <h2>지문 선택</h2>
+        <div id="passageSelection" style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
+            </div>
 
-<h2>지문 선택</h2>
+        <button class="mainBtn" onclick="startPassageTest()">테스트 시작</button>
+    </div>
 
-<div id="passageSelection"></div>
+    <div id="passageTestArea" style="display:none; margin-top: 20px;">
+        <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <label style="font-weight: bold; cursor: pointer;">
+                <input type="checkbox" id="showTranslationOpt" onchange="toggleTranslation()"> 해석 함께 보기
+            </label>
+        </div>
 
-<h3>테스트 유형</h3>
+        <div id="passageQuestion"></div>
+        
+        <div id="passageTranslationView" style="display: none;"></div>
 
-<select id="passageTestType">
-<option value="blank">빈칸 테스트</option>
-<option value="rewrite">백지 테스트</option>
-</select>
+        <div style="margin-top: 25px; display: flex; gap: 10px;">
+            <button class="mainBtn" style="background-color: #28a745;" onclick="submitPassageAnswer()">채점하기</button>
+            <button class="mainBtn" style="background-color: #6c757d;" onclick="nextPassage()">다음 지문</button>
+        </div>
+    </div>
 
-<br><br>
+    <hr>
 
-<button onclick="startPassageTest()">테스트 시작</button>
-
-<hr>
-
-<div id="passageTestArea" style="display:none">
-
-<div id="passageQuestion"></div>
-
-<textarea id="passageAnswer"></textarea>
-
-<br>
-
-<button onclick="submitPassageAnswer()">제출</button>
-
-</div>
-
-<hr>
-
-<div id="passageResult"></div>
-
+    <div id="passageResult" style="margin-top: 20px; font-size: 1.2rem; font-weight: bold; text-align: center;"></div>
 </div>
 
 <script src="../app.js"></script>
-
 </body>
 </html>
