@@ -341,148 +341,120 @@ let wrongWords=[]
 let timerInterval
 let timeLeft=10
 
-function loadTestSets(){
+function loadTestSets() {
+    const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
+    const container = document.getElementById("setSelection");
+    if (!container) return;
 
-const sets=JSON.parse(localStorage.getItem("wordSets"))||[]
-
-const container=document.getElementById("setSelection")
-
-if(!container) return
-
-container.innerHTML=""
-
-sets.forEach((set,i)=>{
-
-const div=document.createElement("div")
-
-div.className="setItem"
-
-div.innerHTML=`
-<label>
-<input type="checkbox" value="${i}">
-${set.name}
-</label>
-`
-
-container.appendChild(div)
-
-})
-
+    container.innerHTML = "";
+    sets.forEach((set, i) => {
+        const div = document.createElement("div");
+        div.className = "setItem";
+        div.setAttribute("data-name", set.name.toLowerCase());
+        div.innerHTML = `
+            <label>
+                <input type="checkbox" value="${i}"> ${set.name}
+            </label>
+        `;
+        container.appendChild(div);
+    });
 }
 
-function startWordTest(){
-
-startStudySession()
-
-const checkboxes=document.querySelectorAll("#setSelection input:checked")
-
-const sets=JSON.parse(localStorage.getItem("wordSets"))||[]
-
-testWords=[]
-
-checkboxes.forEach(cb=>{
-
-const setIndex=cb.value
-
-testWords=testWords.concat(sets[setIndex].words)
-
-})
-
-if(testWords.length===0){
-
-alert("세트를 선택하세요")
-
-return
-
+function filterTestSets() {
+    const query = document.getElementById("setSearchInput").value.toLowerCase();
+    const items = document.querySelectorAll(".setItem");
+    
+    items.forEach(item => {
+        const name = item.getAttribute("data-name");
+        item.style.display = name.includes(query) ? "block" : "none";
+    });
 }
 
-shuffleArray(testWords)
+function startWordTest() {
+    const checkboxes = document.querySelectorAll("#setSelection input:checked");
+    const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
+    testWords = [];
 
-currentQuestion=0
-correctCount=0
-wrongWords=[]
+    checkboxes.forEach(cb => {
+        const setIndex = cb.value;
+        testWords = testWords.concat(sets[setIndex].words);
+    });
 
-document.getElementById("testArea").style.display="block"
+    if (testWords.length === 0) {
+        alert("테스트할 세트를 하나 이상 선택하세요.");
+        return;
+    }
 
-showQuestion()
+    startStudySession();
+    
+    shuffleArray(testWords);
 
+    currentQuestion = 0;
+    correctCount = 0;
+    wrongWords = [];
+
+    document.getElementById("testArea").style.display = "block";
+    document.getElementById("resultArea").innerHTML = "";
+    
+    showQuestion();
 }
+function showQuestion() {
+    if (currentQuestion >= testWords.length) {
+        endTest();
+        return;
+    }
 
-function showQuestion(){
+    const type = document.getElementById("testType").value;
+    const word = testWords[currentQuestion];
+    const qElement = document.getElementById("question");
+    
+    const progress = `(${currentQuestion + 1}/${testWords.length}) `;
 
-if(currentQuestion>=testWords.length){
+    if (type === "meaning") {
+        qElement.innerText = progress + word.eng;
+    } else {
+        qElement.innerText = progress + word.mean.join(", ");
+    }
 
-endTest()
+    const input = document.getElementById("answerInput");
+    input.value = "";
+    input.focus();
 
-return
-
-}
-
-const type=document.getElementById("testType").value
-
-const word=testWords[currentQuestion]
-
-const q=document.getElementById("question")
-
-if(type==="meaning"){
-
-q.innerText=word.eng
-
-}else{
-
-q.innerText=word.mean.join(", ")
-
-}
-
-document.getElementById("answerInput").value=""
-
-startTimer()
-
+    startTimer();
 }
 
 function submitAnswer() {
     clearInterval(timerInterval);
+
     const type = document.getElementById("testType").value;
     const word = testWords[currentQuestion];
     const userAnswer = document.getElementById("answerInput").value.trim();
 
-    let correct = false;
+    let isCorrect = false;
 
     if (type === "meaning") {
-        const userMeans = userAnswer.split(",").map(m => m.trim());
-        correct = word.mean.length === userMeans.length && 
-                  word.mean.every(m => userMeans.includes(m));
+        const userMeans = userAnswer.split(",").map(m => m.trim()).filter(m => m !== "");
+        isCorrect = (word.mean.length === userMeans.length && 
+                     word.mean.every(m => userMeans.includes(m)));
     } else {
-        correct = userAnswer.toLowerCase() === word.eng.toLowerCase();
+        isCorrect = (userAnswer.toLowerCase() === word.eng.toLowerCase());
     }
 
-if(correct){
+    if (isCorrect) {
+        correctCount++;
+        recordQuestion("word", true, word.eng);
+    } else {
+        recordQuestion("word", false, word.eng);
+        wrongWords.push({
+            question: word.eng,
+            correct: word.mean.join(", "),
+            user: userAnswer || "(무응답)"
+        });
+        alert(`오답입니다!\n정답: ${type === 'meaning' ? word.mean.join(", ") : word.eng}`);
+    }
 
-correctCount++
-recordQuestion("word",true,word.eng)
-
-}else{
-
-recordQuestion("word",false,word.eng)
-
-wrongWords.push({
-
-question:word.eng,
-
-correct:word.mean.join(", "),
-
-user:userAnswer
-
-})
-
-alert("정답: "+word.mean.join(", "))
-
-}
-
-currentQuestion++
-
-showQuestion()
-
+    currentQuestion++;
+    showQuestion();
 }
 
 function endTest(){
