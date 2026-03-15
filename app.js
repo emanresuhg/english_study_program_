@@ -13,7 +13,6 @@ let passageCorrect = 0;
 let blankAnswers = [];
 let currentWrongType = 'all';
 
-// --- 기본 유틸리티 ---
 function goHome() { location.href = "../index.html"; }
 function goBack() { history.back(); }
 
@@ -59,7 +58,6 @@ function recordQuestion(type, correct, question, userAns = "") {
     saveStats(stats);
 }
 
-// 지문 전용 오답 저장
 function savePassageWrongNote(entireText, fullWord, cleanAnswer, userAnswer) {
     let notes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
     const sentences = entireText.split(/[.!?]\s/);
@@ -68,16 +66,15 @@ function savePassageWrongNote(entireText, fullWord, cleanAnswer, userAnswer) {
 
     notes.push({
         type: "passageBlank",
-        question: reviewQuestion.trim(), // 목록 보기용 (문장 단위)
-        fullText: entireText,           // 재시험용 (지문 전체)
-        targetWord: fullWord,           // 재시험 시 빈칸 위치 찾기용
+        question: reviewQuestion.trim(),
+        fullText: entireText,
+        targetWord: fullWord,
         correct: cleanAnswer,
         user: userAnswer || "(무응답)"
     });
     localStorage.setItem("wrongNotes", JSON.stringify(notes));
 }
 
-// --- 단어 세트 관리 ---
 function loadSets() {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
     const list = document.getElementById("setList");
@@ -204,7 +201,6 @@ function endTest() {
     document.getElementById("resultArea").innerHTML = `<h2>테스트 종료</h2><p>정답률: ${correctCount}/${testWords.length}</p><button class="mainBtn" onclick="location.reload()">돌아가기</button>`;
 }
 
-// --- 지문 관리 ---
 function loadPassages() {
     const passages = JSON.parse(localStorage.getItem("passages")) || [];
     const list = document.getElementById("passageList");
@@ -277,7 +273,6 @@ function endStudySession() {
     studyStartTime = null;
 }
 
-// --- 오답노트 관리 ---
 let currentWrongTestIndex = 0;
 let wrongTestWords = [];
 
@@ -309,7 +304,6 @@ function loadWrongNotes() {
         listContainer.appendChild(div);
     });
 
-    // 오답노트 초기화 버튼 추가 (목록 하단)
     const resetBtn = document.createElement("button");
     resetBtn.innerText = "오답노트 전체 초기화";
     resetBtn.className = "smallBtn";
@@ -351,7 +345,6 @@ function showNextWrongQuestion() {
     const inputEl = document.getElementById("wrongAnswerInput");
 
     if (q.type === "passageBlank") {
-        // 지문 전체 로직
         const displayHTML = q.fullText.replace(q.targetWord, 
             `<input type="text" id="innerWrongInput" class="passage-input" 
                     style="width:${q.correct.length * 15}px; border-bottom:2px solid #007bff; outline:none;">`
@@ -502,54 +495,6 @@ function startPassageTest() {
 
 let currentPassageMode = "blank";
 
-function showPassageQuestion() {
-    if (currentPassageIndex >= testPassages.length) {
-        endPassageTest();
-        return;
-    }
-
-    const p = testPassages[currentPassageIndex];
-    const qContainer = document.getElementById("passageQuestion");
-    const tContainer = document.getElementById("passageTranslationView");
-    const opt = document.getElementById("showTranslationOpt");
-
-    if (!qContainer) return;
-
-    qContainer.innerHTML = ""; 
-    if (tContainer) {
-        tContainer.innerText = `[해석] ${p.translation || '해석 정보가 없습니다.'}`;
-        tContainer.style.display = (opt && opt.checked) ? "block" : "none";
-    }
-
-    if (currentPassageMode === "blank") {
-        const allWords = p.text.trim().split(/\s+/); 
-        const removeCount = Math.max(1, Math.floor(allWords.length * 0.15));
-        let indexes = [];
-        while (indexes.length < removeCount) {
-            let r = Math.floor(Math.random() * allWords.length);
-            if (!indexes.includes(r)) indexes.push(r);
-        }
-
-        blankAnswers = [];
-        const htmlContent = allWords.map((word, i) => {
-            if (indexes.includes(i)) {
-                const cleanWord = word.replace(/[^a-zA-Z0-9]/g, "");
-                const punctuation = word.replace(cleanWord, ""); 
-                blankAnswers.push(cleanWord);
-                return `<input type="text" class="passage-input" data-answer="${cleanWord}" data-fullword="${word}" style="width:${Math.max(cleanWord.length * 15, 50)}px;">${punctuation}`;
-            }
-            return `<span>${word}</span>`;
-        }).join(" ");
-        qContainer.innerHTML = htmlContent;
-
-    } else {
-        qContainer.innerHTML = `
-            <p style="margin-bottom:10px; color:#666;">지문 전체를 아래에 타이핑하세요.</p>
-            <textarea id="rewriteInput" style="width:100%; height:200px; padding:15px; font-size:1.1rem; border:2px solid #ddd; border-radius:10px;"></textarea>
-        `;
-    }
-}
-
 function submitPassageAnswer() {
     if (currentPassageMode === "blank") {
         submitBlankAnswer();
@@ -598,23 +543,18 @@ function submitRewriteAnswer() {
         alert("원본과 차이가 있습니다. 원본 지문을 확인해 보세요.");
     }
 }
-
-// [수정] 지문 닫기 함수
 function closePassage() {
     const viewSection = document.getElementById("passageViewSection");
     if (viewSection) {
         viewSection.style.display = "none";
-        // 닫은 후 화면 상단으로 부드럽게 이동 (선택 사항)
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
-// [수정] 단어 테스트 시작 로직 (라디오 버튼 값을 읽도록 수정)
 function startWordTest() {
     const checkboxes = document.querySelectorAll("#setSelection input:checked");
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
     
-    // 라디오 버튼에서 선택된 값(meaning 또는 spelling) 가져오기
     const typeEl = document.querySelector("input[name='wordTestType']:checked");
     const type = typeEl ? typeEl.value : "meaning";
 
@@ -714,12 +654,11 @@ function showFeedback(isCorrect, msg = "") {
     if (!feedbackEl) {
         feedbackEl = document.createElement("div");
         feedbackEl.id = "testFeedback";
-        // 화면 중앙에 오도록 스타일 설정
         feedbackEl.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); padding:20px 40px; border-radius:15px; color:white; font-size:1.5rem; font-weight:bold; z-index:10000; display:none; text-align:center; min-width:200px;";
         document.body.appendChild(feedbackEl);
     }
 
-    feedbackEl.innerText = isCorrect ? "정답입니다! 👍" : `오답: ${msg} ❌`;
+    feedbackEl.innerText = isCorrect ? "정답" : `오답: ${msg}`;
     feedbackEl.style.backgroundColor = isCorrect ? "rgba(40, 167, 69, 0.95)" : "rgba(220, 53, 69, 0.95)";
     feedbackEl.style.display = "block";
 
@@ -748,4 +687,61 @@ function showQuestion() {
     answerInput.focus();
     
     startTimer();
+}
+
+function toggleTranslation() {
+    const tContainer = document.getElementById("passageTranslationView");
+    const opt = document.getElementById("showTranslationOpt");
+    
+    if (tContainer && opt) {
+        tContainer.style.display = opt.checked ? "block" : "none";
+    }
+}
+
+function showPassageQuestion() {
+    if (currentPassageIndex >= testPassages.length) {
+        endPassageTest();
+        return;
+    }
+
+    const p = testPassages[currentPassageIndex];
+    const qContainer = document.getElementById("passageQuestion");
+    const tContainer = document.getElementById("passageTranslationView");
+    const opt = document.getElementById("showTranslationOpt");
+
+    if (!qContainer) return;
+
+    qContainer.innerHTML = ""; 
+    
+    if (tContainer) {
+        tContainer.innerText = `[해석] ${p.translation || '해석 정보가 없습니다.'}`;
+        tContainer.style.display = (opt && opt.checked) ? "block" : "none";
+    }
+
+    if (currentPassageMode === "blank") {
+        const allWords = p.text.trim().split(/\s+/); 
+        const removeCount = Math.max(1, Math.floor(allWords.length * 0.15));
+        let indexes = [];
+        while (indexes.length < removeCount) {
+            let r = Math.floor(Math.random() * allWords.length);
+            if (!indexes.includes(r)) indexes.push(r);
+        }
+
+        blankAnswers = [];
+        const htmlContent = allWords.map((word, i) => {
+            if (indexes.includes(i)) {
+                const cleanWord = word.replace(/[^a-zA-Z0-9]/g, "");
+                const punctuation = word.replace(cleanWord, ""); 
+                blankAnswers.push(cleanWord);
+                return `<input type="text" class="passage-input" data-answer="${cleanWord}" data-fullword="${word}" style="width:${Math.max(cleanWord.length * 15, 50)}px;">${punctuation}`;
+            }
+            return `<span>${word}</span>`;
+        }).join(" ");
+        qContainer.innerHTML = htmlContent;
+    } else {
+        qContainer.innerHTML = `
+            <p style="margin-bottom:10px; color:#666;">지문 전체를 아래에 타이핑하세요.</p>
+            <textarea id="rewriteInput" style="width:100%; height:200px; padding:15px; font-size:1.1rem; border:2px solid #ddd; border-radius:10px;"></textarea>
+        `;
+    }
 }
