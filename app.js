@@ -469,17 +469,14 @@ function showPassageQuestion() {
 
     if (!qContainer) return;
 
-    // 1. 초기화 및 해석 설정
     qContainer.innerHTML = ""; 
     if (tContainer) {
         tContainer.innerText = `[해석] ${p.translation || '해석 정보가 없습니다.'}`;
         tContainer.style.display = (opt && opt.checked) ? "block" : "none";
     }
 
-    // 2. 단어 분리 (연속된 공백 제거)
     const allWords = p.text.trim().split(/\s+/); 
     
-    // 약 15% 빈칸 생성 인덱스 추출
     const removeCount = Math.max(1, Math.floor(allWords.length * 0.15));
     let indexes = [];
     while (indexes.length < removeCount) {
@@ -487,36 +484,28 @@ function showPassageQuestion() {
         if (!indexes.includes(r)) indexes.push(r);
     }
 
-    // 3. HTML 생성
     blankAnswers = [];
     const htmlContent = allWords.map((word, i) => {
         if (indexes.includes(i)) {
-            // 알파벳과 숫자만 남기고 제거 (정답 비교용)
             const cleanWord = word.replace(/[^a-zA-Z0-9]/g, "");
-            // 문장 부호만 따로 추출 (화면 표시용)
             const punctuation = word.replace(cleanWord, ""); 
             
             blankAnswers.push(cleanWord);
             
-            // input 박스 생성
             return `<input type="text" class="passage-input" 
                            data-answer="${cleanWord}" 
                            data-fullword="${word}"
                            style="width:${Math.max(cleanWord.length * 15, 50)}px;">${punctuation}`;
         }
-        // 일반 단어는 span으로 감싸서 출력
         return `<span>${word}</span>`;
     }).join(" ");
 
-    // 4. 화면에 삽입
     qContainer.innerHTML = htmlContent;
     
-    // 결과창 리셋
     const resultDiv = document.getElementById("passageResult");
     if (resultDiv) resultDiv.innerText = "";
 }
 
-// [교체] 채점 로직 (맞힌 개수/빈칸 개수 형식)
 function submitPassageAnswer() {
     const inputs = document.querySelectorAll(".passage-input");
     if (inputs.length === 0) return;
@@ -537,15 +526,13 @@ function submitPassageAnswer() {
         } else {
             input.style.borderBottom = "2px solid #dc3545";
             input.style.color = "#dc3545";
-            input.value = fullWord; // 틀린 칸에 정답(풀네임) 표시
+            input.value = fullWord;
         }
-        input.disabled = true; // 채점 후 수정 불가
+        input.disabled = true;
     });
 
-    // 전체 정답 개수 누적
     passageCorrect += correctInThisPassage;
 
-    // 화면에 결과 표시: (맞힌 개수)/(빈칸 개수)
     const resultDiv = document.getElementById("passageResult");
     if (resultDiv) {
         resultDiv.innerHTML = `결과: <span style="color:#28a745">${correctInThisPassage}</span> / <span>${totalInThisPassage}</span> `;
@@ -584,7 +571,6 @@ function nextPassage() {
     showPassageQuestion();
 }
 
-// [교체/추가] 지문 테스트용 지문 목록 불러오기
 function loadPassageSelection() {
     const passages = JSON.parse(localStorage.getItem("passages")) || [];
     const container = document.getElementById("passageSelection");
@@ -634,4 +620,99 @@ function startPassageTest() {
     if (testArea) testArea.style.display = "block";
     
     showPassageQuestion();
+}
+
+let wrongNotes = [];
+let currentWrongTestIndex = 0;
+let wrongTestWords = [];
+
+function loadWrongNotes() {
+    wrongNotes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
+    const typeFilter = document.getElementById("wrongTypeFilter").value;
+    const listContainer = document.getElementById("wrongNoteList");
+    
+    if (!listContainer) return;
+    listContainer.innerHTML = "";
+
+    const filtered = wrongNotes.filter(n => {
+        if (typeFilter === "all") return true;
+        return n.type === typeFilter;
+    });
+
+    if (filtered.length === 0) {
+        listContainer.innerHTML = "<p style='padding:20px;'>해당 카테고리에 오답이 없습니다.</p>";
+        return;
+    }
+
+    filtered.forEach((n, index) => {
+        const div = document.createElement("div");
+        div.className = "wordCard";
+        div.innerHTML = `
+            <div>
+                <span class="badge">${n.type}</span>
+                <p><b>문제:</b> ${n.question}</p>
+                <p style="color: #dc3545;"><b>내가 쓴 답:</b> ${n.user}</p>
+                <p style="color: #28a745;"><b>정답:</b> ${n.correct}</p>
+            </div>
+        `;
+        listContainer.appendChild(div);
+    });
+}
+
+function startWrongNoteTest() {
+    const typeFilter = document.getElementById("wrongTypeFilter").value;
+    wrongNotes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
+    
+    wrongTestWords = wrongNotes.filter(n => {
+        if (typeFilter === "all") return true;
+        return n.type === typeFilter;
+    });
+
+    if (wrongTestWords.length === 0) {
+        alert("재시험을 볼 문제가 없습니다.");
+        return;
+    }
+
+    shuffleArray(wrongTestWords);
+    currentWrongTestIndex = 0;
+    
+    document.getElementById("wrongNoteListSection").style.display = "none";
+    document.getElementById("wrongTestArea").style.display = "block";
+    
+    showNextWrongQuestion();
+}
+
+function showNextWrongQuestion() {
+    if (currentWrongTestIndex >= wrongTestWords.length) {
+        alert("재시험이 완료되었습니다!");
+        location.reload();
+        return;
+    }
+
+    const q = wrongTestWords[currentWrongTestIndex];
+    document.getElementById("wrongQuestionText").innerText = `(${currentWrongTestIndex + 1}/${wrongTestWords.length}) ${q.question}`;
+    document.getElementById("wrongAnswerInput").value = "";
+    document.getElementById("wrongAnswerInput").focus();
+}
+
+function submitWrongTestAnswer() {
+    const userAnswer = document.getElementById("wrongAnswerInput").value.trim().toLowerCase();
+    const currentQ = wrongTestWords[currentWrongTestIndex];
+    
+    const correctAnswers = currentQ.correct.split(",").map(a => a.trim().toLowerCase());
+    const isCorrect = correctAnswers.includes(userAnswer);
+
+    if (isCorrect) {
+        showFeedback(true);
+        const allNotes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
+        const updatedNotes = allNotes.filter(n => !(n.question === currentQ.question && n.type === currentQ.type));
+        localStorage.setItem("wrongNotes", JSON.stringify(updatedNotes));
+    } else {
+        showFeedback(false, currentQ.correct);
+    }
+
+    setTimeout(() => {
+        currentWrongTestIndex++;
+        showNextWrongQuestion();
+    }, 1200);
 }
