@@ -25,10 +25,23 @@
 
 <h3>테스트 유형</h3>
 
-<select id="testType">
-<option value="meaning">뜻 맞히기</option>
-<option value="spelling">스펠링 맞히기</option>
-</select>
+<div id="setupArea">
+    <h2>단어 테스트 설정</h2>
+
+    <div style="margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px;">
+        <p><b>1. 테스트 유형 선택</b></p>
+        <label><input type="radio" name="wordTestType" value="meaning" checked> 뜻 맞히기 (영단어 보고 뜻 쓰기)</label><br>
+        <label><input type="radio" name="wordTestType" value="spelling"> 스펠링 맞히기 (뜻 보고 영어 쓰기)</label>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <p><b>2. 단어 세트 선택</b></p>
+        <input type="text" id="setSearchInput" onkeyup="filterTestSets()" placeholder="세트 이름 검색..." style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:8px;">
+        <div id="setSelection" style="max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px;"></div>
+    </div>
+
+    <button class="mainBtn" onclick="startWordTest()">테스트 시작</button>
+</div>
 
 <br><br>
 
