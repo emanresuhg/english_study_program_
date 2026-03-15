@@ -439,6 +439,7 @@ function filterPassageSelection() {
 
 
 function startPassageTest() {
+    recordStudyDate();
     const checks = document.querySelectorAll("#passageSelection input[type='checkbox']:checked");
     const passages = JSON.parse(localStorage.getItem("passages")) || [];
     const type = document.querySelector("input[name='passageType']:checked").value;
@@ -526,6 +527,7 @@ function closePassage() {
 }
 
 function startWordTest() {
+    recordStudyDate();
     const checkboxes = document.querySelectorAll("#setSelection input:checked");
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
     
@@ -820,4 +822,36 @@ function displayStats() {
     document.getElementById("totalRate").innerText = getRate(totalC, totalQ);
     document.getElementById("wordRate").innerText = getRate(stats.wordCorrect, stats.wordTotal);
     document.getElementById("passageRate").innerText = getRate(stats.passageCorrect, stats.passageTotal);
+}
+
+function endPassageTest() {
+    const sessionSeconds = Math.floor((Date.now() - studyStartTime) / 1000);
+    recordStudyTime(sessionSeconds);
+    
+    recordTestResult('passage', testPassages.length, passageCorrect);
+    
+    document.getElementById("passageTestArea").style.display = "none";
+    const resultArea = document.getElementById("passageResultArea");
+    
+    if (resultArea) {
+        resultArea.style.display = "block";
+        resultArea.innerHTML = `
+            <h2>지문 테스트 종료</h2>
+            <div style="font-size: 1.2rem; margin: 20px 0;">
+                <p>총 지문 수: ${testPassages.length}</p>
+                <p>누적 정답 수: <span style="color:#28a745; font-weight:bold;">${passageCorrect}</span></p>
+            </div>
+            <button class="mainBtn" onclick="location.reload()">돌아가기</button>
+        `;
+    } else {
+        alert(`테스트 종료! 맞힌 개수: ${passageCorrect}`);
+        location.reload();
+    }
+}
+
+function nextPassage() {
+    currentPassageIndex++;
+    const resultDiv = document.getElementById("passageResult");
+    if (resultDiv) resultDiv.innerHTML = "";
+    showPassageQuestion();
 }
