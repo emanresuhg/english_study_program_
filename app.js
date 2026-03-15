@@ -58,23 +58,6 @@ function recordQuestion(type, correct, question, userAns = "") {
     saveStats(stats);
 }
 
-function savePassageWrongNote(entireText, fullWord, cleanAnswer, userAnswer) {
-    let notes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
-    const sentences = entireText.split(/[.!?]\s/);
-    let targetSentence = sentences.find(s => s.includes(fullWord)) || "문장을 찾을 수 없음";
-    const reviewQuestion = targetSentence.replace(fullWord, " ( ___ ) ");
-
-    notes.push({
-        type: "passageBlank",
-        question: reviewQuestion.trim(),
-        fullText: entireText,
-        targetWord: fullWord,
-        correct: cleanAnswer,
-        user: userAnswer || ""
-    });
-    localStorage.setItem("wrongNotes", JSON.stringify(notes));
-}
-
 function loadSets() {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
     const list = document.getElementById("setList");
@@ -744,4 +727,40 @@ function showPassageQuestion() {
             <textarea id="rewriteInput" style="width:100%; height:200px; padding:15px; font-size:1.1rem; border:2px solid #ddd; border-radius:10px;"></textarea>
         `;
     }
+}
+
+function savePassageWrongNote(entireText, fullWord, cleanAnswer, userAnswer) {
+    let notes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
+    
+    const sentences = entireText.split(/(?<=[.!?])\s+/); 
+    let targetSentence = sentences.find(s => s.toLowerCase().includes(fullWord.toLowerCase()));
+    if (!targetSentence) {
+        const lineByLine = entireText.split(/\n+/);
+        targetSentence = lineByLine.find(l => l.toLowerCase().includes(fullWord.toLowerCase()));
+    }
+
+    if (!targetSentence) {
+        const wordIndex = entireText.indexOf(fullWord);
+        if (wordIndex !== -1) {
+            const start = Math.max(0, wordIndex - 40);
+            const end = Math.min(entireText.length, wordIndex + fullWord.length + 40);
+            targetSentence = "..." + entireText.substring(start, end) + "...";
+        } else {
+            targetSentence = "원본 지문 참조";
+        }
+    }
+    const escapedWord = fullWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escapedWord, "gi");
+    const questionSentence = targetSentence.replace(regex, " ( ____ ) ");
+
+    notes.push({
+        type: "passageBlank",
+        question: questionSentence.trim(),
+        fullText: entireText,
+        targetWord: fullWord,
+        correct: cleanAnswer,
+        user: userAnswer || ""
+    });
+    
+    localStorage.setItem("wrongNotes", JSON.stringify(notes));
 }
