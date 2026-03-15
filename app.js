@@ -456,6 +456,7 @@ document.addEventListener("DOMContentLoaded", () => {
     bindEnter("answerInput", submitAnswer);
 });
 
+// [교체] 지문 문제 보여주기 (백지 현상 해결 및 빈칸 생성 강화)
 function showPassageQuestion() {
     if (currentPassageIndex >= testPassages.length) {
         endPassageTest();
@@ -466,33 +467,89 @@ function showPassageQuestion() {
     const qContainer = document.getElementById("passageQuestion");
     const tContainer = document.getElementById("passageTranslationView");
     const opt = document.getElementById("showTranslationOpt");
-    
-    tContainer.innerText = `[해석] ${p.translation}`;
-    
-    tContainer.style.display = opt.checked ? "block" : "none";
 
-    const words = p.text.split(" ");
-    const removeCount = Math.max(1, Math.floor(words.length / 8)); 
+    if (!qContainer) return;
+
+    // 1. 해석 설정
+    if (tContainer) {
+        tContainer.innerText = `[해석] ${p.translation}`;
+        tContainer.style.display = (opt && opt.checked) ? "block" : "none";
+    }
+
+    // 2. 빈칸 생성 로직
+    const allWords = p.text.trim().split(/\s+/); // 공백 기준 분리
+    if (allWords.length === 0) {
+        qContainer.innerText = "지문 내용이 없습니다.";
+        return;
+    }
+
+    // 약 15%의 단어를 빈칸으로 생성 (최소 1개)
+    const removeCount = Math.max(1, Math.floor(allWords.length * 0.15));
     let indexes = [];
     while (indexes.length < removeCount) {
-        let r = Math.floor(Math.random() * words.length);
+        let r = Math.floor(Math.random() * allWords.length);
         if (!indexes.includes(r)) indexes.push(r);
     }
 
     blankAnswers = [];
-    qContainer.innerHTML = words.map((word, i) => {
+    const htmlContent = allWords.map((word, i) => {
         if (indexes.includes(i)) {
-            const cleanWord = word.replace(/[.,!?]/g, "");
+            // 특수문자 제거한 순수 단어를 정답으로 저장
+            const cleanWord = word.replace(/[.,!?()"'“”]/g, "");
             blankAnswers.push(cleanWord);
+            
+            // input 생성 (원래 단어의 특수문자는 input 뒤에 붙임)
+            const punctuation = word.match(/[.,!?()"'“”]/g) || "";
             return `<input type="text" class="passage-input" 
                            data-answer="${cleanWord}" 
                            data-fullword="${word}"
-                           style="width:${cleanWord.length * 12 + 20}px;">` + (word.match(/[.,!?]/g) || "");
+                           style="width:${cleanWord.length * 12 + 25}px;">${punctuation.join("")}`;
         }
         return word;
     }).join(" ");
 
-    document.getElementById("passageResult").innerText = "";
+    // 지문 영역에 HTML 삽입 (이 부분이 실행되어야 글자가 보입니다)
+    qContainer.innerHTML = htmlContent;
+    
+    // 결과창 초기화
+    const resultDiv = document.getElementById("passageResult");
+    if (resultDiv) resultDiv.innerText = "";
+}
+
+// [교체] 채점 로직 (맞힌 개수/빈칸 개수 형식)
+function submitPassageAnswer() {
+    const inputs = document.querySelectorAll(".passage-input");
+    if (inputs.length === 0) return;
+
+    let correctInThisPassage = 0;
+    const totalInThisPassage = inputs.length;
+
+    inputs.forEach(input => {
+        const userAnswer = input.value.trim().toLowerCase();
+        const correctAnswer = input.getAttribute("data-answer").toLowerCase();
+        const fullWord = input.getAttribute("data-fullword");
+
+        if (userAnswer === correctAnswer) {
+            input.style.borderBottom = "2px solid #28a745";
+            input.style.color = "#28a745";
+            input.style.fontWeight = "bold";
+            correctInThisPassage++;
+        } else {
+            input.style.borderBottom = "2px solid #dc3545";
+            input.style.color = "#dc3545";
+            input.value = fullWord; // 틀린 칸에 정답(풀네임) 표시
+        }
+        input.disabled = true; // 채점 후 수정 불가
+    });
+
+    // 전체 정답 개수 누적
+    passageCorrect += correctInThisPassage;
+
+    // 화면에 결과 표시: (맞힌 개수)/(빈칸 개수)
+    const resultDiv = document.getElementById("passageResult");
+    if (resultDiv) {
+        resultDiv.innerHTML = `결과: <span style="color:#28a745">${correctInThisPassage}</span> / <span>${totalInThisPassage}</span> 맞힘`;
+    }
 }
 
 function toggleTranslation() {
@@ -501,31 +558,6 @@ function toggleTranslation() {
     if (tContainer && opt) {
         tContainer.style.display = opt.checked ? "block" : "none";
     }
-}
-
-function submitPassageAnswer() {
-    const inputs = document.querySelectorAll(".passage-input");
-    let correctInThisPassage = 0;
-
-    inputs.forEach(input => {
-        const userAnswer = input.value.trim().toLowerCase();
-        const correctAnswer = input.getAttribute("data-answer").toLowerCase();
-        const fullWord = input.getAttribute("data-fullword");
-
-        if (userAnswer === correctAnswer) {
-            input.style.border = "2px solid #28a745";
-            input.style.color = "#28a745";
-            correctInThisPassage++;
-        } else {
-            input.style.border = "2px solid #dc3545";
-            input.style.color = "#dc3545";
-            input.value = fullWord;
-        }
-        input.disabled = true;
-    });
-
-    passageCorrect += correctInThisPassage;
-    document.getElementById("passageResult").innerText = `이번 지문에서 ${correctInThisPassage}개 맞혔습니다.`;
 }
 
 function endPassageTest() {
