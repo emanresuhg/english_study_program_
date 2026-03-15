@@ -1,5 +1,3 @@
-(무응답)
-
 let studyStartTime = null;
 let testWords = [];
 let currentQuestion = 0;
