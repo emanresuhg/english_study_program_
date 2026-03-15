@@ -577,3 +577,46 @@ document.addEventListener("DOMContentLoaded", () => {
     bindEnter("englishWord", addWord);
     bindEnter("meanings", addWord);
 });
+
+function loadPassageSelection() {
+    const passages = JSON.parse(localStorage.getItem("passages")) || [];
+    const container = document.getElementById("passageSelection");
+    
+    if (!container) return; 
+
+    container.innerHTML = `
+        <input type="text" id="passageSearchInput" onkeyup="filterPassageSelection()" 
+               placeholder="지문 제목 검색..." 
+               style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px;">
+        <div id="passageRealList"></div>
+    `;
+    
+    const listDiv = document.getElementById("passageRealList");
+
+    if (passages.length === 0) {
+        listDiv.innerHTML = "<p style='padding:10px;'>등록된 지문이 없습니다.</p>";
+        return;
+    }
+
+    passages.forEach((p, i) => {
+        const div = document.createElement("div");
+        div.className = "setItem passage-item";
+        div.setAttribute("data-name", p.title.toLowerCase());
+        div.innerHTML = `
+            <label style="display: block; padding: 5px 0; cursor: pointer;">
+                <input type="checkbox" value="${i}"> ${p.title}
+            </label>
+        `;
+        listDiv.appendChild(div);
+    });
+}
+
+function filterPassageSelection() {
+    const query = document.getElementById("passageSearchInput").value.toLowerCase();
+    const items = document.querySelectorAll(".passage-item");
+    
+    items.forEach(item => {
+        const title = item.getAttribute("data-name");
+        item.style.display = title.includes(query) ? "block" : "none";
+    });
+}
