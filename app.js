@@ -552,6 +552,7 @@ function nextPassage() {
     showPassageQuestion();
 }
 
+// [교체/추가] 지문 테스트용 지문 목록 불러오기
 function loadPassageSelection() {
     const passages = JSON.parse(localStorage.getItem("passages")) || [];
     const container = document.getElementById("passageSelection");
@@ -561,7 +562,7 @@ function loadPassageSelection() {
     container.innerHTML = "";
     
     if (passages.length === 0) {
-        container.innerHTML = "<p>등록된 지문이 없습니다. 지문집에서 지문을 먼저 추가해 주세요.</p>";
+        container.innerHTML = "<p style='padding:10px;'>등록된 지문이 없습니다.</p>";
         return;
     }
 
@@ -575,4 +576,29 @@ function loadPassageSelection() {
         `;
         container.appendChild(div);
     });
+}
+
+function startPassageTest() {
+    const checks = document.querySelectorAll("#passageSelection input:checked");
+    const passages = JSON.parse(localStorage.getItem("passages")) || [];
+    
+    testPassages = [];
+    checks.forEach(c => {
+        testPassages.push(passages[c.value]);
+    });
+
+    if (testPassages.length === 0) {
+        alert("테스트할 지문을 하나 이상 선택하세요.");
+        return;
+    }
+
+    startStudySession();
+    shuffleArray(testPassages);
+    currentPassageIndex = 0;
+    passageCorrect = 0;
+
+    const testArea = document.getElementById("passageTestArea");
+    if (testArea) testArea.style.display = "block";
+    
+    showPassageQuestion();
 }
