@@ -45,11 +45,22 @@
 <div class="container">
     <button class="smallBtn" onclick="location.href='tests.html'">← 테스트 메뉴</button>
 
-    <div id="setupArea">
-        <h2>지문 선택</h2>
-        <div id="passageSelection"></div>
-        <button class="mainBtn" onclick="startPassageTest()">테스트 시작</button>
+<div id="setupArea">
+    <h2>테스트 설정</h2>
+    
+    <div style="margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px;">
+        <p><b>1. 테스트 유형 선택</b></p>
+        <label><input type="radio" name="passageType" value="blank" checked> 지문 빈칸 채우기</label>
+        <label style="margin-left: 15px;"><input type="radio" name="passageType" value="rewrite"> 지문 백지 복기 (전체 쓰기)</label>
     </div>
+
+    <div style="margin-bottom: 20px;">
+        <p><b>2. 지문 선택</b></p>
+        <div id="passageSelection" style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px;"></div>
+    </div>
+    
+    <button class="mainBtn" onclick="startPassageTest()">테스트 시작</button>
+</div>
 
     <div id="passageTestArea" style="display:none; margin-top: 20px;">
         <div style="margin-bottom: 15px;">
