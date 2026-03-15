@@ -339,9 +339,6 @@ speechSynthesis.speak(msg)
 
 }
 
-
-=[]
-
 function loadTestSets() {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
     const container = document.getElementById("setSelection");
