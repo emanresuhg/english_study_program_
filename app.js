@@ -331,73 +331,6 @@ function deletePassage(i) {
     loadPassages();
 }
 
-// --- 지문 테스트 ---
-function showPassageQuestion() {
-    if (currentPassageIndex >= testPassages.length) { endPassageTest(); return; }
-    const p = testPassages[currentPassageIndex];
-    const qContainer = document.getElementById("passageQuestion");
-    const tContainer = document.getElementById("passageTranslationView");
-    const opt = document.getElementById("showTranslationOpt");
-    if (!qContainer) return;
-
-    qContainer.innerHTML = ""; 
-    if (tContainer) {
-        tContainer.innerText = `[해석] ${p.translation || '해석 정보가 없습니다.'}`;
-        tContainer.style.display = (opt && opt.checked) ? "block" : "none";
-    }
-
-    const allWords = p.text.trim().split(/\s+/); 
-    const removeCount = Math.max(1, Math.floor(allWords.length * 0.15));
-    let indexes = [];
-    while (indexes.length < removeCount) {
-        let r = Math.floor(Math.random() * allWords.length);
-        if (!indexes.includes(r)) indexes.push(r);
-    }
-
-    blankAnswers = [];
-    const htmlContent = allWords.map((word, i) => {
-        if (indexes.includes(i)) {
-            const cleanWord = word.replace(/[^a-zA-Z0-9]/g, "");
-            const punctuation = word.replace(cleanWord, ""); 
-            blankAnswers.push(cleanWord);
-            return `<input type="text" class="passage-input" data-answer="${cleanWord}" data-fullword="${word}" style="width:${Math.max(cleanWord.length * 15, 50)}px;">${punctuation}`;
-        }
-        return `<span>${word}</span>`;
-    }).join(" ");
-
-    qContainer.innerHTML = htmlContent;
-}
-
-function submitPassageAnswer() {
-    const inputs = document.querySelectorAll(".passage-input");
-    if (inputs.length === 0) return;
-    let correctInThisPassage = 0;
-    const p = testPassages[currentPassageIndex];
-
-    inputs.forEach(input => {
-        const userAnswer = input.value.trim().toLowerCase();
-        const correctAnswer = input.getAttribute("data-answer").toLowerCase();
-        const fullWord = input.getAttribute("data-fullword");
-
-        if (userAnswer === correctAnswer) {
-            input.style.borderBottom = "2px solid #28a745";
-            input.style.color = "#28a745";
-            correctInThisPassage++;
-        } else {
-            input.style.borderBottom = "2px solid #dc3545";
-            input.style.color = "#dc3545";
-            input.value = fullWord;
-            savePassageWrongNote(p.text, fullWord, correctAnswer, userAnswer);
-        }
-        input.disabled = true;
-    });
-
-    passageCorrect += correctInThisPassage;
-    const resultDiv = document.getElementById("passageResult");
-    if (resultDiv) resultDiv.innerHTML = `결과: <span style="color:#28a745">${correctInThisPassage}</span> / <span>${inputs.length}</span> 맞힘`;
-}
-
-// --- 공통 기능 ---
 function startTimer() {
     timeLeft = 10;
     const timer = document.getElementById("timer");
@@ -619,4 +552,133 @@ function filterPassageSelection() {
         const title = item.getAttribute("data-name");
         item.style.display = title.includes(query) ? "block" : "none";
     });
+}
+
+
+function startPassageTest() {
+    const checks = document.querySelectorAll("#passageSelection input[type='checkbox']:checked");
+    const passages = JSON.parse(localStorage.getItem("passages")) || [];
+    const type = document.querySelector("input[name='passageType']:checked").value;
+    
+    testPassages = [];
+    checks.forEach(c => {
+        testPassages.push(passages[c.value]);
+    });
+
+    if (testPassages.length === 0) {
+        alert("테스트할 지문을 하나 이상 선택하세요.");
+        return;
+    }
+
+    currentPassageMode = type; 
+
+    startStudySession();
+    shuffleArray(testPassages);
+    currentPassageIndex = 0;
+    passageCorrect = 0;
+
+    document.getElementById("setupArea").style.display = "none"; 
+    const testArea = document.getElementById("passageTestArea");
+    if (testArea) testArea.style.display = "block";
+    
+    showPassageQuestion();
+}
+
+let currentPassageMode = "blank";
+
+function showPassageQuestion() {
+    if (currentPassageIndex >= testPassages.length) {
+        endPassageTest();
+        return;
+    }
+
+    const p = testPassages[currentPassageIndex];
+    const qContainer = document.getElementById("passageQuestion");
+    const tContainer = document.getElementById("passageTranslationView");
+    const opt = document.getElementById("showTranslationOpt");
+
+    if (!qContainer) return;
+
+    qContainer.innerHTML = ""; 
+    if (tContainer) {
+        tContainer.innerText = `[해석] ${p.translation || '해석 정보가 없습니다.'}`;
+        tContainer.style.display = (opt && opt.checked) ? "block" : "none";
+    }
+
+    if (currentPassageMode === "blank") {
+        const allWords = p.text.trim().split(/\s+/); 
+        const removeCount = Math.max(1, Math.floor(allWords.length * 0.15));
+        let indexes = [];
+        while (indexes.length < removeCount) {
+            let r = Math.floor(Math.random() * allWords.length);
+            if (!indexes.includes(r)) indexes.push(r);
+        }
+
+        blankAnswers = [];
+        const htmlContent = allWords.map((word, i) => {
+            if (indexes.includes(i)) {
+                const cleanWord = word.replace(/[^a-zA-Z0-9]/g, "");
+                const punctuation = word.replace(cleanWord, ""); 
+                blankAnswers.push(cleanWord);
+                return `<input type="text" class="passage-input" data-answer="${cleanWord}" data-fullword="${word}" style="width:${Math.max(cleanWord.length * 15, 50)}px;">${punctuation}`;
+            }
+            return `<span>${word}</span>`;
+        }).join(" ");
+        qContainer.innerHTML = htmlContent;
+
+    } else {
+        qContainer.innerHTML = `
+            <p style="margin-bottom:10px; color:#666;">지문 전체를 아래에 타이핑하세요.</p>
+            <textarea id="rewriteInput" style="width:100%; height:200px; padding:15px; font-size:1.1rem; border:2px solid #ddd; border-radius:10px;"></textarea>
+        `;
+    }
+}
+
+function submitPassageAnswer() {
+    if (currentPassageMode === "blank") {
+        submitBlankAnswer();
+    } else {
+        submitRewriteAnswer();
+    }
+}
+
+function submitBlankAnswer() {
+    const inputs = document.querySelectorAll(".passage-input");
+    const p = testPassages[currentPassageIndex];
+    let correctInThisPassage = 0;
+
+    inputs.forEach(input => {
+        const userAnswer = input.value.trim().toLowerCase();
+        const correctAnswer = input.getAttribute("data-answer").toLowerCase();
+        const fullWord = input.getAttribute("data-fullword");
+
+        if (userAnswer === correctAnswer) {
+            input.style.borderBottom = "2px solid #28a745";
+            input.style.color = "#28a745";
+            correctInThisPassage++;
+        } else {
+            input.style.borderBottom = "2px solid #dc3545";
+            input.style.color = "#dc3545";
+            input.value = fullWord;
+            savePassageWrongNote(p.text, fullWord, correctAnswer, userAnswer);
+        }
+        input.disabled = true;
+    });
+
+    passageCorrect += correctInThisPassage;
+    const resultDiv = document.getElementById("passageResult");
+    if (resultDiv) resultDiv.innerHTML = `결과: <span style="color:#28a745">${correctInThisPassage}</span> 맞힘`;
+}
+
+function submitRewriteAnswer() {
+    const p = testPassages[currentPassageIndex];
+    const userText = document.getElementById("rewriteInput").value.trim();
+    const originalText = p.text.trim();
+    
+    if (userText.toLowerCase() === originalText.toLowerCase()) {
+        alert("완벽합니다! 지문을 모두 맞히셨습니다.");
+        passageCorrect++;
+    } else {
+        alert("원본과 차이가 있습니다. 원본 지문을 확인해 보세요.");
+    }
 }
