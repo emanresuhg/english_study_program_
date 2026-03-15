@@ -28,6 +28,19 @@ style="width:100%;padding:10px;margin:10px 0"
 <h2>지문 목록</h2>
 <div id="passageList" class="container"></div>
 
+<hr>
+<div id="passageViewSection" style="display:none; border:1px solid #ddd; padding:20px; border-radius:10px; background:#f9f9f9;">
+    <h2 id="viewTitle"></h2>
+    <p><strong>주제:</strong> <span id="viewTopic"></span></p>
+    <hr>
+    <h3>본문</h3>
+    <p id="viewText" style="background:#fff; padding:15px; border-radius:5px;"></p>
+    <h3>해석</h3>
+    <p id="viewTranslation" style="background:#fff; padding:15px; border-radius:5px;"></p>
+    <br>
+    <button onclick="closePassage()">닫기</button>
+</div>
+
 <h3>지문 추가</h3>
 <input id="title" placeholder="제목">
 <textarea id="text" placeholder="지문"></textarea>
