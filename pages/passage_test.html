@@ -56,17 +56,17 @@
             <label><input type="checkbox" id="showTranslationOpt" onchange="toggleTranslation()"> 해석 함께 보기</label>
         </div>
 
-        <div id="passageQuestion" style="line-height: 2.2; background: white; padding: 25px; border-radius: 12px; border: 1px solid #ddd; font-size: 1.1rem;"></div>
+        <div id="passageQuestion"></div>
         
-        <div id="passageTranslationView" style="display: none; margin-top: 15px; padding: 15px; background: #f0f4f8; border-left: 4px solid #007bff;"></div>
+        <div id="passageTranslationView" style="display: none;"></div>
 
         <div style="margin-top: 25px; display: flex; gap: 10px;">
-            <button class="mainBtn" style="background-color: #28a745;" onclick="submitPassageAnswer()">채점하기</button>
-            <button class="mainBtn" style="background-color: #6c757d;" onclick="nextPassage()">다음 지문</button>
+            <button class="mainBtn" onclick="submitPassageAnswer()">채점하기</button>
+            <button class="mainBtn" onclick="nextPassage()">다음 지문</button>
         </div>
     </div>
 
-    <div id="passageResult" style="margin-top: 20px; font-size: 1.2rem; font-weight: bold; text-align: center;"></div>
+    <div id="passageResult"></div>
 </div>
 
 <script src="../app.js"></script>
