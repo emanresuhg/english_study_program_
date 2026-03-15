@@ -1213,6 +1213,9 @@ function showWrong(type) {
     currentWrongType = type;
     const notes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
     const list = document.getElementById("wrongList");
+    
+    if (!list) return; 
+
     list.innerHTML = "";
 
     const filtered = type === 'all' ? notes : notes.filter(n => n.type === type);
