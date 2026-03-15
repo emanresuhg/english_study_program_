@@ -629,6 +629,7 @@ function startPassageTest() {
     currentPassageIndex = 0;
     passageCorrect = 0;
 
+    document.getElementById("setupArea").style.display = "none"; 
     const testArea = document.getElementById("passageTestArea");
     if (testArea) testArea.style.display = "block";
     
