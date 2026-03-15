@@ -1,84 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>Stats</title>
-<link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <title>학습 통계</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .stats-container { padding: 20px; max-width: 600px; margin: auto; }
+        .stats-section { margin-bottom: 30px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+        .stat-card { padding: 15px; background: #f8f9fa; border-radius: 10px; text-align: center; border: 1px solid #eee; }
+        .stat-card .label { display: block; font-size: 0.85rem; color: #666; margin-bottom: 5px; }
+        .stat-card .value { font-size: 1.3rem; font-weight: bold; color: #333; }
+        
+        .highlight { background: #e7f3ff; grid-column: span 2; border: 1px solid #cfe2ff; }
+        .highlight .value { color: #007bff; font-size: 1.8rem; }
+        
+        .secondary { background: #fffcf0; border: 1px solid #faebcc; }
+        .secondary .value { color: #f39c12; }
+
+        h3 { margin-top: 0; color: #444; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .nav-buttons { margin-bottom: 20px; }
+    </style>
 </head>
 
 <body>
 
 <header>
-<h1>통계</h1>
+    <h1>학습 리포트</h1>
 </header>
 
-<div style="padding:20px">
+<div class="stats-container">
+    
+    <div class="nav-buttons">
+        <button class="smallBtn" onclick="goBack()">← 이전</button>
+        <button class="smallBtn" onclick="goHome()">홈</button>
+    </div>
 
-<button onclick="goBack()">← 이전</button>
-<button onclick="goHome()">홈</button>
+    <div class="stats-section">
+        <h3>공부 기록</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="label">공부한 날짜 수</span>
+                <span id="studyDays" class="value">0</span>일
+            </div>
+            <div class="stat-card">
+                <span class="label">총 공부 시간</span>
+                <span id="studyTime" class="value">0분</span>
+            </div>
+        </div>
+    </div>
 
-<h2>전체 통계</h2>
+    <div class="stats-section">
+        <h3>테스트 통계</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="label">총 문제 수</span>
+                <span id="totalQuestions" class="value">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">총 정답 수</span>
+                <span id="totalCorrect" class="value">0</span>
+            </div>
+            <div class="stat-card highlight">
+                <span class="label">전체 정답률</span>
+                <span id="totalRate" class="value">0%</span>
+            </div>
+        </div>
+        
+        <div class="stats-grid" style="margin-top: 15px;">
+            <div class="stat-card secondary">
+                <span class="label">단어 정답률</span>
+                <span id="wordRate" class="value">0%</span>
+            </div>
+            <div class="stat-card secondary">
+                <span class="label">지문 정답률</span>
+                <span id="passageRate" class="value">0%</span>
+            </div>
+        </div>
+    </div>
 
-<div class="card">
-총 문제 수: <span id="totalQuestions">0</span>
-</div>
-
-<div class="card">
-총 정답 수: <span id="totalCorrect">0</span>
-</div>
-
-<div class="card">
-전체 정답률: <span id="totalRate">0%</span>
-</div>
-
-<h2>유형별 통계</h2>
-
-<div class="card">
-단어 테스트 정답률: <span id="wordRate">0%</span>
-</div>
-
-<div class="card">
-지문 테스트 정답률: <span id="passageRate">0%</span>
-</div>
-
-<h2>학습 분석</h2>
-
-<div class="card">
-가장 많이 틀린 단어: <span id="mostWrongWord">없음</span>
-</div>
-
-<div class="card">
-가장 많이 공부한 지문: <span id="mostPassage">없음</span>
-</div>
-
-<h2>공부 기록</h2>
-
-<div id="statsBox">
-
-공부한 날짜 수: <span id="studyDays">0</span><br><br>
-
-공부량: 준비중<br>
-공부시간: <span id="studyTime">0</span>분
-연속 공부: 준비중
-
-</div>
-
-<h2>데이터 관리</h2>
-
-<button onclick="exportData()">데이터 다운로드</button>
-
-<br><br>
-
-<input type="file" id="importFile">
-
-<button onclick="importData()">데이터 업로드</button>
+    <p style="text-align: center; color: #999; font-size: 0.8rem;">
+        데이터는 브라우저에 자동으로 저장됩니다.
+    </p>
 
 </div>
 
 <script src="../app.js"></script>
-
 <script>
-loadStats()
+    // 페이지 로드 시 통계 데이터 표시
+    document.addEventListener("DOMContentLoaded", () => {
+        displayStats();
+    });
 </script>
 
 </body>
