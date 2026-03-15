@@ -265,44 +265,40 @@ document.getElementById("wordSection").style.display="none"
 
 }
 
-function loadWords(){
+function loadWords() {
+    const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
+    let words = [];
 
-const sets=JSON.parse(localStorage.getItem("wordSets"))||[]
+    if (currentSetIndex === "fav") {
+        sets.forEach(s => {
+            s.words.forEach(w => { if(w.favorite) words.push(w); });
+        });
+    } else {
+        if (currentSetIndex === null || !sets[currentSetIndex]) return;
+        words = sets[currentSetIndex].words;
+    }
 
-const words=sets[currentSetIndex].words
+    const list = document.getElementById("wordList");
+    if (!list) return;
+    list.innerHTML = "";
 
-const list=document.getElementById("wordList")
+    words.sort((a, b) => a.eng.toLowerCase().localeCompare(b.eng.toLowerCase()));
 
-list.innerHTML=""
-
-words.sort((a,b)=>a.eng.localeCompare(b.eng))
-
-words.forEach((w,i)=>{
-
-const div=document.createElement("div")
-
-div.className="wordCard"
-
-div.innerHTML=`
-
-<b>${w.eng}</b> : ${w.mean.join(", ")}
-
-<div class="wordActions">
-
-<button class="smallBtn" onclick="speakWord('${w.eng}')">🔊</button>
-
-<button class="smallBtn" onclick="toggleFavorite(${i})">${w.favorite?"★":"☆"}</button>
-
-<button class="smallBtn" onclick="deleteWord(${i})">삭제</button>
-
-</div>
-
-`
-
-list.appendChild(div)
-
-})
-
+    words.forEach((w, i) => {
+        const div = document.createElement("div");
+        div.className = "wordCard";
+        div.innerHTML = `
+            <b>${w.eng}</b> : ${w.mean.join(", ")}
+            <div class="wordActions">
+                <button class="smallBtn" onclick="speakWord('${w.eng}')">🔊</button>
+                <button class="smallBtn" id="favBtn-${i}" onclick="toggleFavorite(${i})">
+                    ${w.favorite ? "★" : "☆"}
+                </button>
+                <button class="smallBtn" onclick="deleteWord(${i})">삭제</button>
+            </div>
+        `;
+        list.appendChild(div);
+    });
 }
 
 function addWord(){
