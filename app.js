@@ -1,3 +1,5 @@
+(무응답)
+
 let studyStartTime = null;
 let testWords = [];
 let currentQuestion = 0;
@@ -51,7 +53,7 @@ function recordQuestion(type, correct, question, userAns = "") {
             type: category,
             question: question,
             correct: correctAnswer,
-            user: userAns || "무응답"
+            user: userAns || ""
         });
         localStorage.setItem("wrongNotes", JSON.stringify(notes));
     }
@@ -70,7 +72,7 @@ function savePassageWrongNote(entireText, fullWord, cleanAnswer, userAnswer) {
         fullText: entireText,
         targetWord: fullWord,
         correct: cleanAnswer,
-        user: userAnswer || "(무응답)"
+        user: userAnswer || ""
     });
     localStorage.setItem("wrongNotes", JSON.stringify(notes));
 }
