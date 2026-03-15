@@ -35,7 +35,6 @@ function recordStudy() {
     saveStats(stats);
 }
 
-// --- 오답 기록 로직 (단어/지문 통합) ---
 function recordQuestion(type, correct, question, userAns = "") {
     let stats = getStats();
     stats.totalQuestions++;
@@ -43,7 +42,8 @@ function recordQuestion(type, correct, question, userAns = "") {
 
     if (!correct && type === "word") {
         let notes = JSON.parse(localStorage.getItem("wrongNotes")) || [];
-        const testType = document.getElementById("testType").value;
+        const typeEl = document.querySelector("input[name='wordTestType']:checked");
+        const testType = typeEl ? typeEl.value : "meaning";
         let category = (testType === "meaning") ? "wordMeaning" : "wordSpelling";
         const wordObj = testWords[currentQuestion];
         const correctAnswer = (testType === "meaning") ? wordObj.mean.join(", ") : wordObj.eng;
