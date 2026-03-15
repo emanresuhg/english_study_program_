@@ -47,30 +47,24 @@
 
     <div id="setupArea">
         <h2>지문 선택</h2>
-        <div id="passageSelection" style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
-            </div>
-
+        <div id="passageSelection"></div>
         <button class="mainBtn" onclick="startPassageTest()">테스트 시작</button>
     </div>
 
     <div id="passageTestArea" style="display:none; margin-top: 20px;">
-        <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-            <label style="font-weight: bold; cursor: pointer;">
-                <input type="checkbox" id="showTranslationOpt" onchange="toggleTranslation()"> 해석 함께 보기
-            </label>
+        <div style="margin-bottom: 15px;">
+            <label><input type="checkbox" id="showTranslationOpt" onchange="toggleTranslation()"> 해석 함께 보기</label>
         </div>
 
-        <div id="passageQuestion"></div>
+        <div id="passageQuestion" style="line-height: 2.2; background: white; padding: 25px; border-radius: 12px; border: 1px solid #ddd; font-size: 1.1rem;"></div>
         
-        <div id="passageTranslationView" style="display: none;"></div>
+        <div id="passageTranslationView" style="display: none; margin-top: 15px; padding: 15px; background: #f0f4f8; border-left: 4px solid #007bff;"></div>
 
         <div style="margin-top: 25px; display: flex; gap: 10px;">
             <button class="mainBtn" style="background-color: #28a745;" onclick="submitPassageAnswer()">채점하기</button>
             <button class="mainBtn" style="background-color: #6c757d;" onclick="nextPassage()">다음 지문</button>
         </div>
     </div>
-
-    <hr>
 
     <div id="passageResult" style="margin-top: 20px; font-size: 1.2rem; font-weight: bold; text-align: center;"></div>
 </div>
