@@ -440,12 +440,13 @@ function saveWrongNotes() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    loadSets();
-    loadPassages();
-    loadStats();
-    loadTestSets();
+    if (typeof loadSets === 'function') loadSets();
+    if (typeof loadPassages === 'function') loadPassages();
+    if (typeof loadStats === 'function') loadStats();
+    if (typeof loadTestSets === 'function') loadTestSets();
     
-    // 엔터키 바인딩
+    if (typeof loadPassageSelection === 'function') loadPassageSelection();
+    
     const bindEnter = (id, action) => {
         const el = document.getElementById(id);
         if (el) el.addEventListener("keydown", (e) => { if (e.key === "Enter") action(); });
