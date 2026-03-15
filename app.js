@@ -198,19 +198,6 @@ function speakWord(word) {
     speechSynthesis.speak(msg);
 }
 
-function showFeedback(isCorrect, msg = "") {
-    let feedbackEl = document.getElementById("testFeedback");
-    if (!feedbackEl) {
-        feedbackEl = document.createElement("div");
-        feedbackEl.id = "testFeedback";
-        document.body.appendChild(feedbackEl);
-    }
-    feedbackEl.innerText = isCorrect ? "정답입니다!" : `오답: ${msg}`;
-    feedbackEl.style.backgroundColor = isCorrect ? "rgba(40, 167, 69, 0.9)" : "rgba(220, 53, 69, 0.9)";
-    feedbackEl.style.display = "block";
-    setTimeout(() => { feedbackEl.style.display = "none"; }, 1000);
-}
-
 function endTest() {
     endStudySession();
     document.getElementById("testArea").style.display = "none";
@@ -643,59 +630,6 @@ function startWordTest() {
     showQuestion();
 }
 
-// [수정] 단어 문제 표시 로직 (라디오 버튼 값 참조)
-function showQuestion() {
-    if (currentQuestion >= testWords.length) { endTest(); return; }
-    
-    // 라디오 버튼 값 확인
-    const typeEl = document.querySelector("input[name='wordTestType']:checked");
-    const type = typeEl ? typeEl.value : "meaning";
-    
-    const word = testWords[currentQuestion];
-    const progress = `(${currentQuestion + 1}/${testWords.length}) `;
-    
-    document.getElementById("question").innerText = progress + (type === "meaning" ? word.eng : word.mean.join(", "));
-    document.getElementById("answerInput").value = "";
-    document.getElementById("answerInput").focus();
-    startTimer();
-}
-
-// [수정] 단어 정답 제출 로직 (라디오 버튼 값 참조)
-function submitAnswer() {
-    clearInterval(timerInterval);
-
-    const typeEl = document.querySelector("input[name='wordTestType']:checked");
-    const type = typeEl ? typeEl.value : "meaning";
-    
-    const word = testWords[currentQuestion];
-    const userAnswer = document.getElementById("answerInput").value.trim();
-
-    let isCorrect = false;
-    if (type === "meaning") {
-        const userMeans = userAnswer.split(",").map(m => m.trim().toLowerCase()).filter(m => m !== "");
-        const correctMeans = word.mean.map(m => m.trim().toLowerCase());
-        isCorrect = (userMeans.length === correctMeans.length && correctMeans.every(m => userMeans.includes(m)));
-    } else {
-        isCorrect = (userAnswer.toLowerCase() === word.eng.toLowerCase());
-    }
-
-    if (isCorrect) {
-        correctCount++;
-        recordQuestion("word", true, word.eng);
-        showFeedback(true);
-    } else {
-        recordQuestion("word", false, word.eng, userAnswer);
-        const correctMsg = type === 'meaning' ? word.mean.join(", ") : word.eng;
-        showFeedback(false, correctMsg); 
-    }
-
-    setTimeout(() => {
-        currentQuestion++;
-        showQuestion();
-    }, 1200);
-}
-
-
 function loadTestSets() {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
     const container = document.getElementById("setSelection");
@@ -734,4 +668,84 @@ function filterWordSets() {
             item.style.display = "none";
         }
     });
+}
+
+function submitAnswer() {
+    clearInterval(timerInterval);
+
+    const typeEl = document.querySelector("input[name='wordTestType']:checked");
+    const type = typeEl ? typeEl.value : "meaning";
+    
+    const word = testWords[currentQuestion];
+    const answerInput = document.getElementById("answerInput");
+    const userAnswer = answerInput.value.trim();
+
+    let isCorrect = false;
+    if (type === "meaning") {
+        const userMeans = userAnswer.split(",").map(m => m.trim().toLowerCase()).filter(m => m !== "");
+        const correctMeans = word.mean.map(m => m.trim().toLowerCase());
+        isCorrect = (userMeans.length === correctMeans.length && correctMeans.every(m => userMeans.includes(m)));
+    } else {
+        isCorrect = (userAnswer.toLowerCase() === word.eng.toLowerCase());
+    }
+
+    if (isCorrect) {
+        correctCount++;
+        recordQuestion("word", true, word.eng);
+        showFeedback(true);
+    } else {
+        recordQuestion("word", false, word.eng, userAnswer);
+        const correctMsg = type === 'meaning' ? word.mean.join(", ") : word.eng;
+        showFeedback(false, correctMsg); 
+    }
+
+    answerInput.disabled = true;
+
+    setTimeout(() => {
+        answerInput.disabled = false;
+        currentQuestion++;
+        showQuestion();
+    }, 1200);
+}
+
+function showFeedback(isCorrect, msg = "") {
+    let feedbackEl = document.getElementById("testFeedback");
+    
+    if (!feedbackEl) {
+        feedbackEl = document.createElement("div");
+        feedbackEl.id = "testFeedback";
+        // 화면 중앙에 오도록 스타일 설정
+        feedbackEl.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); padding:20px 40px; border-radius:15px; color:white; font-size:1.5rem; font-weight:bold; z-index:10000; display:none; text-align:center; min-width:200px;";
+        document.body.appendChild(feedbackEl);
+    }
+
+    feedbackEl.innerText = isCorrect ? "정답입니다! 👍" : `오답: ${msg} ❌`;
+    feedbackEl.style.backgroundColor = isCorrect ? "rgba(40, 167, 69, 0.95)" : "rgba(220, 53, 69, 0.95)";
+    feedbackEl.style.display = "block";
+
+    setTimeout(() => {
+        feedbackEl.style.display = "none";
+    }, 1000);
+}
+
+function showQuestion() {
+    if (currentQuestion >= testWords.length) { 
+        endTest(); 
+        return; 
+    }
+    
+    const typeEl = document.querySelector("input[name='wordTestType']:checked");
+    const type = typeEl ? typeEl.value : "meaning";
+    
+    const word = testWords[currentQuestion];
+    const progress = `(${currentQuestion + 1}/${testWords.length}) `;
+    
+    document.getElementById("question").innerText = progress + (type === "meaning" ? word.eng : word.mean.join(", "));
+    
+    const answerInput = document.getElementById("answerInput");
+    answerInput.value = "";
+    answerInput.disabled = false;
+    answerInput.focus();
+    
+    startTimer();
 }
