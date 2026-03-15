@@ -826,36 +826,36 @@ list.appendChild(div)
 
 }
 
+function searchPassages() {
+    const input = document.getElementById("passageSearch");
+    if (!input) return;
+    const keyword = input.value.toLowerCase();
+    const passages = JSON.parse(localStorage.getItem("passages")) || [];
+    const list = document.getElementById("passageList");
+    if (!list) return;
 
+    list.innerHTML = "";
 
-function searchPassages(){
+    if (keyword === "") {
+        loadPassages();
+        return;
+    }
 
-const input=document.getElementById("passageSearch")
+    passages.forEach((p, i) => {
+        if (!p.title.toLowerCase().includes(keyword)) return;
 
-if(!input) return
-
-const keyword=input.value.toLowerCase()
-
-const passages=JSON.parse(localStorage.getItem("passages"))||[]
-
-const list=document.getElementById("passageList")
-
-if(!list) return
-
-list.innerHTML=""
-
-passages.forEach((p,i)=>{
-
-if(!p.title.toLowerCase().includes(keyword)) return
-
-const div=document.createElement("div")
-
-div.innerHTML=p.title
-
-list.appendChild(div)
-
-})
-
+        const div = document.createElement("div");
+        div.className = "wordCard";
+        div.innerHTML = `
+            <div onclick="alert('주제: ${p.topic || '없음'}\\n\\n${p.text}')" style="cursor:pointer">
+                <b>${p.title}</b>
+            </div>
+            <div class="wordActions">
+                <button class="smallBtn" onclick="deletePassage(${i})">삭제</button>
+            </div>
+        `;
+        list.appendChild(div);
+    });
 }
 
 function showFavorites(){
