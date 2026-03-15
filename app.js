@@ -16,17 +16,6 @@ let currentWrongType = 'all';
 function goHome() { location.href = "../index.html"; }
 function goBack() { history.back(); }
 
-function getStats() {
-    return JSON.parse(localStorage.getItem("stats")) || {
-        totalQuestions: 0, totalCorrect: 0,
-        wordQuestions: 0, wordCorrect: 0,
-        passageQuestions: 0, passageCorrect: 0,
-        wrongWords: {}, passageStudy: {}, studyDates: [], studyMinutes: 0
-    };
-}
-
-function saveStats(stats) { localStorage.setItem("stats", JSON.stringify(stats)); }
-
 function recordStudy() {
     let stats = getStats();
     const today = new Date().toISOString().slice(0, 10);
@@ -182,6 +171,8 @@ function endTest() {
     endStudySession();
     document.getElementById("testArea").style.display = "none";
     document.getElementById("resultArea").innerHTML = `<h2>테스트 종료</h2><p>정답률: ${correctCount}/${testWords.length}</p><button class="mainBtn" onclick="location.reload()">돌아가기</button>`;
+    recordTestResult('word', testWords.length, correctCount);
+    recordStudyTime(Math.floor((new Date() - studyStartTime) / 1000));
 }
 
 function loadPassages() {
@@ -763,4 +754,70 @@ function savePassageWrongNote(entireText, fullWord, cleanAnswer, userAnswer) {
     });
     
     localStorage.setItem("wrongNotes", JSON.stringify(notes));
+}
+
+
+function getStats() {
+    const defaultStats = {
+        studyDates: [],
+        totalStudyTime: 0,
+        wordTotal: 0,
+        wordCorrect: 0,
+        passageTotal: 0,
+        passageCorrect: 0
+    };
+    return JSON.parse(localStorage.getItem("userStats")) || defaultStats;
+}
+
+function saveStats(stats) {
+    localStorage.setItem("userStats", JSON.stringify(stats));
+}
+
+function recordStudyDate() {
+    let stats = getStats();
+    const today = new Date().toLocaleDateString();
+    if (!stats.studyDates.includes(today)) {
+        stats.studyDates.push(today);
+    }
+    saveStats(stats);
+}
+
+function recordStudyTime(seconds) {
+    let stats = getStats();
+    stats.totalStudyTime += seconds;
+    saveStats(stats);
+}
+
+function recordTestResult(type, total, correct) {
+    let stats = getStats();
+    if (type === 'word') {
+        stats.wordTotal += total;
+        stats.wordCorrect += correct;
+    } else if (type === 'passage') {
+        stats.passageTotal += total;
+        stats.passageCorrect += correct;
+    }
+    saveStats(stats);
+}
+
+function displayStats() {
+    const stats = getStats();
+    
+    document.getElementById("studyDays").innerText = stats.studyDates.length;
+    
+    const hours = Math.floor(stats.totalStudyTime / 3600);
+    const mins = Math.floor((stats.totalStudyTime % 3600) / 60);
+    document.getElementById("studyTime").innerText = hours > 0 ? `${hours}시간 ${mins}분` : `${mins}분`;
+
+    const totalQ = stats.wordTotal + stats.passageTotal;
+    const totalC = stats.wordCorrect + stats.passageCorrect;
+    
+    document.getElementById("totalQuestions").innerText = totalQ;
+    document.getElementById("totalCorrect").innerText = totalC;
+
+    const getRate = (correct, total) => total > 0 ? Math.round((correct / total) * 100) + "%" : "0%";
+
+    document.getElementById("totalRate").innerText = getRate(totalC, totalQ);
+    document.getElementById("wordRate").innerText = getRate(stats.wordCorrect, stats.wordTotal);
+    document.getElementById("passageRate").innerText = getRate(stats.passageCorrect, stats.passageTotal);
 }
