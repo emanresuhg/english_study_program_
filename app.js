@@ -473,3 +473,100 @@ document.addEventListener("DOMContentLoaded", () => {
     bindEnter("meanings", addWord);
     bindEnter("answerInput", submitAnswer);
 });
+
+// [교체] 지문 문제 보여주기 (해석창 초기 상태 반영)
+function showPassageQuestion() {
+    if (currentPassageIndex >= testPassages.length) {
+        endPassageTest();
+        return;
+    }
+
+    const p = testPassages[currentPassageIndex];
+    const qContainer = document.getElementById("passageQuestion");
+    const tContainer = document.getElementById("passageTranslationView");
+    const opt = document.getElementById("showTranslationOpt");
+    
+    tContainer.innerText = `[해석] ${p.translation}`;
+    
+    tContainer.style.display = opt.checked ? "block" : "none";
+
+    const words = p.text.split(" ");
+    const removeCount = Math.max(1, Math.floor(words.length / 8)); 
+    let indexes = [];
+    while (indexes.length < removeCount) {
+        let r = Math.floor(Math.random() * words.length);
+        if (!indexes.includes(r)) indexes.push(r);
+    }
+
+    blankAnswers = [];
+    qContainer.innerHTML = words.map((word, i) => {
+        if (indexes.includes(i)) {
+            const cleanWord = word.replace(/[.,!?]/g, "");
+            blankAnswers.push(cleanWord);
+            return `<input type="text" class="passage-input" 
+                           data-answer="${cleanWord}" 
+                           data-fullword="${word}"
+                           style="width:${cleanWord.length * 12 + 20}px;">` + (word.match(/[.,!?]/g) || "");
+        }
+        return word;
+    }).join(" ");
+
+    document.getElementById("passageResult").innerText = "";
+}
+
+function toggleTranslation() {
+    const tContainer = document.getElementById("passageTranslationView");
+    const opt = document.getElementById("showTranslationOpt");
+    if (tContainer && opt) {
+        tContainer.style.display = opt.checked ? "block" : "none";
+    }
+}
+
+function submitPassageAnswer() {
+    const inputs = document.querySelectorAll(".passage-input");
+    let correctInThisPassage = 0;
+
+    inputs.forEach(input => {
+        const userAnswer = input.value.trim().toLowerCase();
+        const correctAnswer = input.getAttribute("data-answer").toLowerCase();
+        const fullWord = input.getAttribute("data-fullword");
+
+        if (userAnswer === correctAnswer) {
+            input.style.border = "2px solid #28a745";
+            input.style.color = "#28a745";
+            correctInThisPassage++;
+        } else {
+            input.style.border = "2px solid #dc3545";
+            input.style.color = "#dc3545";
+            input.value = fullWord;
+        }
+        input.disabled = true;
+    });
+
+    passageCorrect += correctInThisPassage;
+    document.getElementById("passageResult").innerText = `이번 지문에서 ${correctInThisPassage}개 맞혔습니다.`;
+}
+
+function endPassageTest() {
+    endStudySession();
+
+    document.getElementById("passageTestArea").style.display = "none";
+
+    const result = document.getElementById("passageResult");
+    if (result) {
+        result.innerHTML = `
+            <div style="text-align:center; padding:20px; border:2px solid #333; border-radius:15px; background:#fff;">
+                <h2>테스트 종료</h2>
+                <p style="font-size:1.5rem; margin:20px 0;">
+                    총 맞힌 빈칸 개수: <span style="color:blue; font-weight:bold;">${passageCorrect}</span> 개
+                </p>
+                <button class="mainBtn" onclick="location.reload()">처음으로 돌아가기</button>
+            </div>
+        `;
+    }
+}
+
+function nextPassage() {
+    currentPassageIndex++;
+    showPassageQuestion();
+}
