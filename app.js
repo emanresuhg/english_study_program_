@@ -352,20 +352,36 @@ loadWords()
 
 function toggleFavorite(i) {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
-    
+
     if (currentSetIndex === "fav") {
-        alert("즐겨찾기 모음에서는 별표를 끌 수 없습니다. 원본 세트에서 변경해주세요!");
-        return;
-    }
+        let favWords = [];
+        sets.forEach(s => {
+            s.words.forEach(w => { if(w.favorite) favWords.push(w); });
+        });
+        favWords.sort((a, b) => a.eng.toLowerCase().localeCompare(b.eng.toLowerCase()));
 
-    const word = sets[currentSetIndex].words[i];
-    word.favorite = !word.favorite;
-    
-    localStorage.setItem("wordSets", JSON.stringify(sets));
+        const targetWord = favWords[i];
+        
+        sets.forEach(s => {
+            s.words.forEach(w => {
+                if (w.eng === targetWord.eng && JSON.stringify(w.mean) === JSON.stringify(targetWord.mean)) {
+                    w.favorite = false;
+                }
+            });
+        });
 
-    const starBtn = document.getElementById("favBtn-" + i);
-    if (starBtn) {
-        starBtn.innerText = word.favorite ? "★" : "☆";
+        localStorage.setItem("wordSets", JSON.stringify(sets));
+        loadWords(); 
+
+    } else {
+        const word = sets[currentSetIndex].words[i];
+        word.favorite = !word.favorite;
+        localStorage.setItem("wordSets", JSON.stringify(sets));
+
+        const starBtn = document.getElementById("favBtn-" + i);
+        if (starBtn) {
+            starBtn.innerText = word.favorite ? "★" : "☆";
+        }
     }
 }
 
@@ -849,6 +865,8 @@ const sets=JSON.parse(localStorage.getItem("wordSets"))||[]
 if(currentSetIndex===null) return
 
 const words=sets[currentSetIndex].words
+
+words.sort((a, b) => a.eng.toLowerCase().localeCompare(b.eng.toLowerCase())); 
 
 const list=document.getElementById("wordList")
 
