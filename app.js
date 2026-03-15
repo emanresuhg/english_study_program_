@@ -548,7 +548,7 @@ function submitPassageAnswer() {
     // 화면에 결과 표시: (맞힌 개수)/(빈칸 개수)
     const resultDiv = document.getElementById("passageResult");
     if (resultDiv) {
-        resultDiv.innerHTML = `결과: <span style="color:#28a745">${correctInThisPassage}</span> / <span>${totalInThisPassage}</span> 맞힘`;
+        resultDiv.innerHTML = `결과: <span style="color:#28a745">${correctInThisPassage}</span> / <span>${totalInThisPassage}</span> `;
     }
 }
 
