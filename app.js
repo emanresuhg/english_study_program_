@@ -467,45 +467,51 @@ function showPassageQuestion() {
     const tContainer = document.getElementById("passageTranslationView");
     const opt = document.getElementById("showTranslationOpt");
 
-    if (!qContainer) {
-        console.error("지문을 표시할 영역(passageQuestion)을 찾을 수 없습니다.");
-        return;
-    }
+    if (!qContainer) return;
 
-    // 1. 초기화
+    // 1. 초기화 및 해석 설정
     qContainer.innerHTML = ""; 
     if (tContainer) {
         tContainer.innerText = `[해석] ${p.translation || '해석 정보가 없습니다.'}`;
         tContainer.style.display = (opt && opt.checked) ? "block" : "none";
     }
 
-    // 2. 단어 분리 및 빈칸 생성
+    // 2. 단어 분리 (연속된 공백 제거)
     const allWords = p.text.trim().split(/\s+/); 
-    const removeCount = Math.max(1, Math.floor(allWords.length * 0.15)); // 15% 빈칸
     
+    // 약 15% 빈칸 생성 인덱스 추출
+    const removeCount = Math.max(1, Math.floor(allWords.length * 0.15));
     let indexes = [];
     while (indexes.length < removeCount) {
         let r = Math.floor(Math.random() * allWords.length);
-        // 이미 선택된 인덱스가 아니고, 너무 짧은 단어(a, I 등)가 아닐 때만 (선택사항)
         if (!indexes.includes(r)) indexes.push(r);
     }
 
+    // 3. HTML 생성
+    blankAnswers = [];
     const htmlContent = allWords.map((word, i) => {
         if (indexes.includes(i)) {
-            const cleanWord = word.replace(/[.,!?()"'“”]/g, "");
-            const punctuation = word.replace(cleanWord, ""); // 문장부호 추출
+            // 알파벳과 숫자만 남기고 제거 (정답 비교용)
+            const cleanWord = word.replace(/[^a-zA-Z0-9]/g, "");
+            // 문장 부호만 따로 추출 (화면 표시용)
+            const punctuation = word.replace(cleanWord, ""); 
             
+            blankAnswers.push(cleanWord);
+            
+            // input 박스 생성
             return `<input type="text" class="passage-input" 
                            data-answer="${cleanWord}" 
                            data-fullword="${word}"
-                           style="width:${Math.max(cleanWord.length * 12, 40)}px;">${punctuation}`;
+                           style="width:${Math.max(cleanWord.length * 15, 50)}px;">${punctuation}`;
         }
+        // 일반 단어는 span으로 감싸서 출력
         return `<span>${word}</span>`;
     }).join(" ");
 
-    // 3. 화면에 삽입
+    // 4. 화면에 삽입
     qContainer.innerHTML = htmlContent;
     
+    // 결과창 리셋
     const resultDiv = document.getElementById("passageResult");
     if (resultDiv) resultDiv.innerText = "";
 }
