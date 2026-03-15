@@ -418,7 +418,6 @@ function submitWrongTestAnswer() {
     }, 1200);
 }
 
-// --- 초기화 ---
 document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById("setList")) loadSets();
     if (document.getElementById("setSelection")) loadTestSets();
