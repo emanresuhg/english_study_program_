@@ -1,5 +1,13 @@
-let studyStartTime=null
-
+// 변수는 파일 통틀어 딱 한 번씩만 선언해야 합니다!
+let studyStartTime = null;
+let testWords = [];
+let currentQuestion = 0;
+let correctCount = 0;
+let wrongWords = [];
+let timerInterval;
+let timeLeft = 10;
+let currentSetIndex = null;
+let displayedWords = []; // 아까 추가했던 변수
 function goHome(){
 location.href="../index.html"
 }
@@ -106,7 +114,6 @@ const minutes=stats.studyMinutes||0
 document.getElementById("studyTime").textContent=minutes
 }
 
-let currentSetIndex=null
 function loadSets() {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
     const list = document.getElementById("setList");
@@ -193,7 +200,6 @@ document.getElementById("wordSection").style.display="none"
 
 }
 
-let displayedWords = [];
 
 function loadWords() {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
@@ -334,12 +340,7 @@ speechSynthesis.speak(msg)
 }
 
 
-let testWords=[]
-let currentQuestion=0
-let correctCount=0
-let wrongWords=[]
-let timerInterval
-let timeLeft=10
+=[]
 
 function loadTestSets() {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
