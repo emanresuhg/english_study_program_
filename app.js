@@ -353,7 +353,8 @@ let timeLeft=10
 function loadTestSets() {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
     const container = document.getElementById("setSelection");
-    if (!container) return;
+    
+    if (!container) return; 
 
     container.innerHTML = "";
     sets.forEach((set, i) => {
