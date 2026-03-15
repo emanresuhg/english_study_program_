@@ -523,25 +523,22 @@ startTimer()
 
 function submitAnswer(){
 
-clearInterval(timerInterval)
+// app.js 내 submitAnswer 수정 제안
+function submitAnswer() {
+    clearInterval(timerInterval);
+    const type = document.getElementById("testType").value;
+    const word = testWords[currentQuestion];
+    const userAnswer = document.getElementById("answerInput").value.trim();
 
-const type=document.getElementById("testType").value
+    let correct = false;
 
-const word=testWords[currentQuestion]
-
-const userAnswer=document.getElementById("answerInput").value.trim()
-
-let correct=false
-
-if(type==="meaning"){
-
-correct=word.mean.includes(userAnswer)
-
-}else{
-
-correct=userAnswer.toLowerCase()===word.eng.toLowerCase()
-
-}
+    if (type === "meaning") {
+        const userMeans = userAnswer.split(",").map(m => m.trim());
+        correct = word.mean.length === userMeans.length && 
+                  word.mean.every(m => userMeans.includes(m));
+    } else {
+        correct = userAnswer.toLowerCase() === word.eng.toLowerCase();
+    }
 
 if(correct){
 
