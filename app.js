@@ -1,15 +1,12 @@
 let studyStartTime=null
 
 function goHome(){
-
 location.href="../index.html"
-
 }
 
 
 
 function getStats(){
-
 return JSON.parse(localStorage.getItem("stats")) || {
 
 totalQuestions:0,
@@ -24,167 +21,99 @@ passageCorrect:0,
 wrongWords:{},
 passageStudy:{},
 studyDates:[]
-
 }
-
 }
 
 function saveStats(stats){
-
 localStorage.setItem("stats",JSON.stringify(stats))
-
 }
 
 function recordStudy(){
-
 let stats=getStats()
-
 const today=new Date().toISOString().slice(0,10)
-
 if(!stats.studyDates.includes(today)){
-
 stats.studyDates.push(today)
-
 }
-
 saveStats(stats)
-
 }
 
 function recordQuestion(type,correct,question){
-
 let stats=getStats()
-
 stats.totalQuestions++
-
 if(correct) stats.totalCorrect++
-
 if(type==="word"){
-
 stats.wordQuestions++
-
 if(correct) stats.wordCorrect++
-
 }
-
 if(type==="passage"){
-
 stats.passageQuestions++
-
 if(correct) stats.passageCorrect++
-
 }
-
 if(!correct && type==="word"){
-
 stats.wrongWords[question]=(stats.wrongWords[question]||0)+1
-
 }
-
 if(type==="passage"){
-
 stats.passageStudy[question]=(stats.passageStudy[question]||0)+1
-
 }
-
 recordStudy()
-
 saveStats(stats)
-
 }
 
 function loadStats(){
-
 let stats=getStats()
-
 if(!document.getElementById("totalQuestions")) return
 
 document.getElementById("totalQuestions").textContent=stats.totalQuestions
 document.getElementById("totalCorrect").textContent=stats.totalCorrect
 
 let rate=0
-
 if(stats.totalQuestions>0){
-
 rate=Math.round((stats.totalCorrect/stats.totalQuestions)*100)
-
 }
-
 document.getElementById("totalRate").textContent=rate+"%"
-
 let wordRate=0
-
 if(stats.wordQuestions>0){
-
 wordRate=Math.round((stats.wordCorrect/stats.wordQuestions)*100)
-
 }
 
 document.getElementById("wordRate").textContent=wordRate+"%"
-
 let passageRate=0
-
 if(stats.passageQuestions>0){
-
 passageRate=Math.round((stats.passageCorrect/stats.passageQuestions)*100)
-
 }
 
 document.getElementById("passageRate").textContent=passageRate+"%"
-
 let mostWrong="없음"
 let max=0
-
 for(let w in stats.wrongWords){
-
 if(stats.wrongWords[w]>max){
-
 max=stats.wrongWords[w]
 mostWrong=w
-
 }
-
 }
-
 document.getElementById("mostWrongWord").textContent=mostWrong
-
 let mostPassage="없음"
 max=0
-
 for(let p in stats.passageStudy){
-
 if(stats.passageStudy[p]>max){
-
 max=stats.passageStudy[p]
 mostPassage=p
-
 }
-
 }
-
 document.getElementById("mostPassage").textContent=mostPassage
-
 document.getElementById("studyDays").textContent=stats.studyDates.length
-
 const minutes=stats.studyMinutes||0
-
 document.getElementById("studyTime").textContent=minutes
-
 }
-
-
 
 let currentSetIndex=null
-
 function loadSets() {
     const sets = JSON.parse(localStorage.getItem("wordSets")) || [];
     const list = document.getElementById("setList");
     if (!list) return;
     list.innerHTML = "";
-
     const favDiv = document.createElement("div");
     favDiv.className = "wordCard";
-    favDiv.style.border = "2px solid #ffd700"; // 즐겨찾기는 강조 표시
     favDiv.innerHTML = `
         <b>★ 즐겨찾기 단어 모음</b>
         <div class="wordActions">
@@ -192,7 +121,6 @@ function loadSets() {
         </div>
     `;
     list.appendChild(favDiv);
-
     sets.forEach((set, i) => {
         const div = document.createElement("div");
         div.className = "wordCard";
