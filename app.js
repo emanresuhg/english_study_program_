@@ -456,7 +456,6 @@ document.addEventListener("DOMContentLoaded", () => {
     bindEnter("answerInput", submitAnswer);
 });
 
-// [교체] 지문 문제 보여주기 (백지 현상 해결 및 빈칸 생성 강화)
 function showPassageQuestion() {
     if (currentPassageIndex >= testPassages.length) {
         endPassageTest();
@@ -468,50 +467,45 @@ function showPassageQuestion() {
     const tContainer = document.getElementById("passageTranslationView");
     const opt = document.getElementById("showTranslationOpt");
 
-    if (!qContainer) return;
-
-    // 1. 해석 설정
-    if (tContainer) {
-        tContainer.innerText = `[해석] ${p.translation}`;
-        tContainer.style.display = (opt && opt.checked) ? "block" : "none";
-    }
-
-    // 2. 빈칸 생성 로직
-    const allWords = p.text.trim().split(/\s+/); // 공백 기준 분리
-    if (allWords.length === 0) {
-        qContainer.innerText = "지문 내용이 없습니다.";
+    if (!qContainer) {
+        console.error("지문을 표시할 영역(passageQuestion)을 찾을 수 없습니다.");
         return;
     }
 
-    // 약 15%의 단어를 빈칸으로 생성 (최소 1개)
-    const removeCount = Math.max(1, Math.floor(allWords.length * 0.15));
+    // 1. 초기화
+    qContainer.innerHTML = ""; 
+    if (tContainer) {
+        tContainer.innerText = `[해석] ${p.translation || '해석 정보가 없습니다.'}`;
+        tContainer.style.display = (opt && opt.checked) ? "block" : "none";
+    }
+
+    // 2. 단어 분리 및 빈칸 생성
+    const allWords = p.text.trim().split(/\s+/); 
+    const removeCount = Math.max(1, Math.floor(allWords.length * 0.15)); // 15% 빈칸
+    
     let indexes = [];
     while (indexes.length < removeCount) {
         let r = Math.floor(Math.random() * allWords.length);
+        // 이미 선택된 인덱스가 아니고, 너무 짧은 단어(a, I 등)가 아닐 때만 (선택사항)
         if (!indexes.includes(r)) indexes.push(r);
     }
 
-    blankAnswers = [];
     const htmlContent = allWords.map((word, i) => {
         if (indexes.includes(i)) {
-            // 특수문자 제거한 순수 단어를 정답으로 저장
             const cleanWord = word.replace(/[.,!?()"'“”]/g, "");
-            blankAnswers.push(cleanWord);
+            const punctuation = word.replace(cleanWord, ""); // 문장부호 추출
             
-            // input 생성 (원래 단어의 특수문자는 input 뒤에 붙임)
-            const punctuation = word.match(/[.,!?()"'“”]/g) || "";
             return `<input type="text" class="passage-input" 
                            data-answer="${cleanWord}" 
                            data-fullword="${word}"
-                           style="width:${cleanWord.length * 12 + 25}px;">${punctuation.join("")}`;
+                           style="width:${Math.max(cleanWord.length * 12, 40)}px;">${punctuation}`;
         }
-        return word;
+        return `<span>${word}</span>`;
     }).join(" ");
 
-    // 지문 영역에 HTML 삽입 (이 부분이 실행되어야 글자가 보입니다)
+    // 3. 화면에 삽입
     qContainer.innerHTML = htmlContent;
     
-    // 결과창 초기화
     const resultDiv = document.getElementById("passageResult");
     if (resultDiv) resultDiv.innerText = "";
 }
