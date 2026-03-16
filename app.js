@@ -167,14 +167,6 @@ function speakWord(word) {
     speechSynthesis.speak(msg);
 }
 
-function endTest() {
-    endStudySession();
-    document.getElementById("testArea").style.display = "none";
-    document.getElementById("resultArea").innerHTML = `<h2>테스트 종료</h2><p>정답률: ${correctCount}/${testWords.length}</p><button class="mainBtn" onclick="location.reload()">돌아가기</button>`;
-    recordTestResult('word', testWords.length, correctCount);
-    recordStudyTime(Math.floor((new Date() - studyStartTime) / 1000));
-}
-
 function loadPassages() {
     const passages = JSON.parse(localStorage.getItem("passages")) || [];
     const list = document.getElementById("passageList");
@@ -784,12 +776,6 @@ function recordStudyDate() {
     saveStats(stats);
 }
 
-function recordStudyTime(seconds) {
-    let stats = getStats();
-    stats.totalStudyTime += seconds;
-    saveStats(stats);
-}
-
 function recordTestResult(type, total, correct) {
     let stats = getStats();
     if (type === 'word') {
@@ -802,34 +788,44 @@ function recordTestResult(type, total, correct) {
     saveStats(stats);
 }
 
-function displayStats() {
-    const stats = getStats();
-    
-    document.getElementById("studyDays").innerText = stats.studyDates.length;
-    
-    const hours = Math.floor(stats.totalStudyTime / 3600);
-    const mins = Math.floor((stats.totalStudyTime % 3600) / 60);
-    document.getElementById("studyTime").innerText = hours > 0 ? `${hours}시간 ${mins}분` : `${mins}분`;
+function nextPassage() {
+    currentPassageIndex++;
+    const resultDiv = document.getElementById("passageResult");
+    if (resultDiv) resultDiv.innerHTML = "";
+    showPassageQuestion();
+}
 
-    const totalQ = stats.wordTotal + stats.passageTotal;
-    const totalC = stats.wordCorrect + stats.passageCorrect;
+function recordStudyTime(seconds) {
+
+    let stats = getStats();
+    stats.totalStudyTime = (stats.totalStudyTime || 0) + seconds;
+    saveStats(stats);
+}
+
+function endTest() {
+    if (studyStartTime) {
+        const sessionSeconds = Math.floor((Date.now() - studyStartTime) / 1000);
+        recordStudyTime(sessionSeconds);
+        studyStartTime = null;
+    }
+
+    document.getElementById("testArea").style.display = "none";
+    document.getElementById("resultArea").innerHTML = `
+        <h2>테스트 종료</h2>
+        <p>정답률: ${correctCount}/${testWords.length}</p>
+        <button class="mainBtn" onclick="location.reload()">돌아가기</button>
+    `;
     
-    document.getElementById("totalQuestions").innerText = totalQ;
-    document.getElementById("totalCorrect").innerText = totalC;
-
-    const getRate = (correct, total) => total > 0 ? Math.round((correct / total) * 100) + "%" : "0%";
-
-    document.getElementById("totalRate").innerText = getRate(totalC, totalQ);
-    document.getElementById("wordRate").innerText = getRate(stats.wordCorrect, stats.wordTotal);
-    document.getElementById("passageRate").innerText = getRate(stats.passageCorrect, stats.passageTotal);
+    recordTestResult('word', testWords.length, correctCount);
 }
 
 function endPassageTest() {
-    const sessionSeconds = Math.floor((Date.now() - studyStartTime) / 1000);
-    recordStudyTime(sessionSeconds);
-    
-    recordTestResult('passage', testPassages.length, passageCorrect);
-    
+    if (studyStartTime) {
+        const sessionSeconds = Math.floor((Date.now() - studyStartTime) / 1000);
+        recordStudyTime(sessionSeconds);
+        studyStartTime = null;
+    }
+
     document.getElementById("passageTestArea").style.display = "none";
     const resultArea = document.getElementById("passageResultArea");
     
@@ -837,21 +833,64 @@ function endPassageTest() {
         resultArea.style.display = "block";
         resultArea.innerHTML = `
             <h2>지문 테스트 종료</h2>
-            <div style="font-size: 1.2rem; margin: 20px 0;">
-                <p>총 지문 수: ${testPassages.length}</p>
-                <p>누적 정답 수: <span style="color:#28a745; font-weight:bold;">${passageCorrect}</span></p>
-            </div>
+            <p>누적 정답 수: ${passageCorrect}</p>
             <button class="mainBtn" onclick="location.reload()">돌아가기</button>
         `;
-    } else {
-        alert(`테스트 종료! 맞힌 개수: ${passageCorrect}`);
-        location.reload();
+    }
+    
+    recordTestResult('passage', testPassages.length, passageCorrect);
+}
+
+// 1. 페이지 접속 시각 기록 (전역 변수)
+let pageEntryTime = Date.now();
+
+function recordTotalTime() {
+    if (!pageEntryTime) return;
+    
+    const sessionSeconds = Math.floor((Date.now() - pageEntryTime) / 1000);
+    if (sessionSeconds > 0) {
+        let stats = getStats();
+        stats.totalStudyTime = (stats.totalStudyTime || 0) + sessionSeconds;
+        saveStats(stats);
+        pageEntryTime = Date.now();
     }
 }
 
-function nextPassage() {
-    currentPassageIndex++;
-    const resultDiv = document.getElementById("passageResult");
-    if (resultDiv) resultDiv.innerHTML = "";
-    showPassageQuestion();
+window.addEventListener("beforeunload", recordTotalTime);
+setInterval(recordTotalTime, 60000);
+
+function displayStats() {
+    recordTotalTime(); 
+
+    const stats = getStats();
+    
+    document.getElementById("studyDays").innerText = (stats.studyDates && stats.studyDates.length) || 0;
+    
+    const totalSeconds = stats.totalStudyTime || 0;
+    const hours = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+
+    let timeString = "";
+    if (hours > 0) {
+        timeString = `${hours}시간 ${mins}분`;
+    } else {
+        timeString = `${mins}분`;
+    }
+
+    const studyTimeEl = document.getElementById("studyTime");
+    if (studyTimeEl) studyTimeEl.innerText = timeString || "0분";
+
+    const wordTotal = stats.wordTotal || 0;
+    const wordCorrect = stats.wordCorrect || 0;
+    const passageTotal = stats.passageTotal || 0;
+    const passageCorrect = stats.passageCorrect || 0;
+    const totalQ = wordTotal + passageTotal;
+    const totalC = wordCorrect + passageCorrect;
+    const getRate = (correct, total) => total > 0 ? Math.round((correct / total) * 100) + "%" : "0%";
+
+    if (document.getElementById("totalQuestions")) document.getElementById("totalQuestions").innerText = totalQ;
+    if (document.getElementById("totalCorrect")) document.getElementById("totalCorrect").innerText = totalC;
+    if (document.getElementById("totalRate")) document.getElementById("totalRate").innerText = getRate(totalC, totalQ);
+    if (document.getElementById("wordRate")) document.getElementById("wordRate").innerText = getRate(wordCorrect, wordTotal);
+    if (document.getElementById("passageRate")) document.getElementById("passageRate").innerText = getRate(passageCorrect, passageTotal);
 }
